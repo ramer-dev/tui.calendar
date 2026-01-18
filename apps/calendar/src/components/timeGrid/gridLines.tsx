@@ -3,6 +3,7 @@ import { memo } from 'preact/compat';
 
 import { useTheme } from '@src/contexts/themeStore';
 import { cls, toPercent } from '@src/helpers/css';
+import { getTimeSteps } from '@src/time/datetime';
 
 import type { TimeGridRow } from '@t/grid';
 import type { ThemeState } from '@t/theme';
@@ -20,11 +21,15 @@ export const GridLines = memo(function GridLines({
   timeGridRows: TimeGridRow[];
 }) {
   const { halfHourLineBorder, hourLineBorder } = useTheme(gridLineBorderSelector);
-
+  const { STEPS } = getTimeSteps(timeGridRows);
+  let count = 1;
   return (
     <div className={cls('gridlines')}>
-      {timeGridRows.map((time, index) => {
-        const isUpperLine = index % 2 === 0;
+
+      {timeGridRows.map((time) => {
+        count = count === STEPS + 1 ? 1 : count;
+        const isUpperLine = count !== STEPS;
+        count += 1;
 
         return (
           <div

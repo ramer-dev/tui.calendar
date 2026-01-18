@@ -16,7 +16,7 @@ import {
 import { weekTimeGridLeftSelector } from '@src/selectors/theme';
 import { timezonesSelector } from '@src/selectors/timezone';
 import TZDate from '@src/time/date';
-import { addMinutes, setTimeStrToDate } from '@src/time/datetime';
+import { addMinutes, setTimeStrToDate, getTimeSteps } from '@src/time/datetime';
 import { isNil, isPresent } from '@src/utils/type';
 
 import type { TimeGridRow } from '@t/grid';
@@ -119,16 +119,18 @@ interface Props {
 }
 
 export const TimeColumn = memo(function TimeColumn({ timeGridRows, nowIndicatorState }: Props) {
+  const { STEPS } = getTimeSteps(timeGridRows);
+  
   const showNowIndicator = useStore(showNowIndicatorOptionSelector);
   const timezones = useStore(timezonesSelector);
   const timezonesCollapsed = useStore(timezonesCollapsedOptionSelector);
-
   const tzConverter = useTZConverter();
   const { width, borderRight } = useTheme(weekTimeGridLeftSelector);
 
   const rowsByHour = useMemo(
-    () => timeGridRows.filter((_, index) => index % 2 === 0 || index === timeGridRows.length - 1),
-    [timeGridRows]
+    () =>
+      timeGridRows.filter((_, index) => index % STEPS === 0 || index === timeGridRows.length - 1),
+    [timeGridRows, STEPS]
   );
   const hourRowsPropsMapper = useCallback(
     (row: TimeGridRow, index: number, diffFromPrimaryTimezone?: number) => {

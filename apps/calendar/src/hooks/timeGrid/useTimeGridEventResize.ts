@@ -8,7 +8,7 @@ import { useCurrentPointerPositionInGrid } from '@src/hooks/event/useCurrentPoin
 import { useDraggingEvent } from '@src/hooks/event/useDraggingEvent';
 import type EventUIModel from '@src/model/eventUIModel';
 import type TZDate from '@src/time/date';
-import { addMinutes, max, setTimeStrToDate } from '@src/time/datetime';
+import { addMinutes, max, setTimeStrToDate, getTimeSteps } from '@src/time/datetime';
 import { findLastIndex } from '@src/utils/array';
 import { isNil, isPresent } from '@src/utils/type';
 
@@ -119,11 +119,11 @@ export function useTimeGridEventResize({
         const { height, goingDurationHeight, comingDurationHeight } = clonedUIModel;
         const newHeight = Math.max(
           oneRowHeight +
-            (goingDurationHeight * height) / 100 +
-            (comingDurationHeight * height) / 100,
+          (goingDurationHeight * height) / 100 +
+          (comingDurationHeight * height) / 100,
           timeGridData.rows[currentGridPos.rowIndex].top -
-            timeGridData.rows[eventStartDateRowIndex].top +
-            oneRowHeight
+          timeGridData.rows[eventStartDateRowIndex].top +
+          oneRowHeight
         );
         const newGoingDurationHeight = (goingDurationHeight * height) / newHeight;
         const newComingDurationHeight = (comingDurationHeight * height) / newHeight;
@@ -198,8 +198,8 @@ export function useTimeGridEventResize({
         ),
         -comingDuration
       );
-      const minEndDate = addMinutes(resizingStartUIModel.getStarts(), 30);
-
+      const { STEP_MINUTES } = getTimeSteps(timeGridData.rows);
+      const minEndDate = addMinutes(resizingStartUIModel.getStarts(), STEP_MINUTES);
       eventBus.fire('beforeUpdateEvent', {
         event: resizingStartUIModel.model.toEventObject(),
         changes: {
