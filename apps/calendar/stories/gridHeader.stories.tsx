@@ -1,6 +1,6 @@
 import { h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { GridHeader } from '@src/components/dayGridCommon/gridHeader';
 import { getRowStyleInfo } from '@src/time/datetime';
@@ -9,14 +9,20 @@ import { ProviderWrapper } from '@stories/util/providerWrapper';
 
 import type { TemplateMonthDayName } from '@t/template';
 
-export default { title: 'Components/GridHeader', component: GridHeader };
+const meta: Meta<typeof GridHeader> = {
+  title: 'Components/GridHeader',
+  component: GridHeader,
+};
+
+export default meta;
+type Story = StoryObj<typeof GridHeader>;
 
 interface DayNamesStory {
   dayNames: TemplateMonthDayName[];
   marginLeft?: string;
 }
 
-const Template: Story<DayNamesStory> = ({ dayNames, marginLeft }) => {
+const Template = ({ dayNames, marginLeft }: DayNamesStory) => {
   const { rowStyleInfo } = getRowStyleInfo(dayNames.length, true, 0, true);
 
   return (
@@ -53,24 +59,32 @@ const threeDayNames = [
   },
 ];
 
-export const oneDay = Template.bind({});
-oneDay.args = {
-  dayNames: oneDayName,
+export const oneDay: Story = {
+  render: Template,
+  args: {
+    dayNames: oneDayName,
+  },
 };
 
-export const threeDays = Template.bind({});
-threeDays.args = {
-  dayNames: threeDayNames,
+export const threeDays: Story = {
+  render: Template,
+  args: {
+    dayNames: threeDayNames,
+  },
 };
 
-export const oneDayWithMargin = Template.bind({});
-oneDayWithMargin.args = {
-  dayNames: oneDayName,
-  marginLeft: '60px',
+export const oneDayWithMargin: Story = {
+  render: Template,
+  args: {
+    dayNames: oneDayName,
+    marginLeft: '60px',
+  },
 };
 
-export const threeDaysWithMargin = Template.bind({});
-threeDaysWithMargin.args = {
-  dayNames: threeDayNames,
-  marginLeft: '60px',
+export const threeDaysWithMargin: Story = {
+  render: Template,
+  args: {
+    dayNames: threeDayNames,
+    marginLeft: '60px',
+  },
 };

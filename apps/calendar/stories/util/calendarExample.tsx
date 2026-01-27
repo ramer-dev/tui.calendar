@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { useLayoutEffect, useRef } from 'preact/hooks';
 
-import type { Story } from '@storybook/preact';
+import type { StoryFn } from '@storybook/preact';
 
 import Calendar from '@src/factory/calendar';
 
@@ -13,7 +13,7 @@ interface Props {
   onInit?: (instance: Calendar) => void;
 }
 
-export type CalendarExampleStory = Story<Props>;
+export type CalendarExampleStory = StoryFn<Props>;
 
 export function CalendarExample({ options, containerHeight = 600, onInit }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);

@@ -10,6 +10,7 @@ export enum FormStateActionType {
   setPrivate = 'setPrivate',
   setAllday = 'setAllday',
   setState = 'setState',
+  setRecurrenceRule = 'setRecurrenceRule',
   reset = 'reset',
 }
 
@@ -21,6 +22,7 @@ type FormStateAction =
   | { type: FormStateActionType.setPrivate; isPrivate: boolean }
   | { type: FormStateActionType.setAllday; isAllday: boolean }
   | { type: FormStateActionType.setState; state: EventState }
+  | { type: FormStateActionType.setRecurrenceRule; recurrenceRule: string }
   | { type: FormStateActionType.reset };
 
 export type FormStateDispatcher = (action: FormStateAction) => void;
@@ -30,6 +32,7 @@ const defaultFormState: EventObject = {
   location: '',
   isAllday: false,
   isPrivate: false,
+  recurrenceRule: '',
   state: 'Busy',
 };
 
@@ -50,6 +53,8 @@ function formStateReducer(state: EventObject, action: FormStateAction): EventObj
       return { ...state, isAllday: action.isAllday };
     case FormStateActionType.setState:
       return { ...state, state: action.state };
+    case FormStateActionType.setRecurrenceRule:
+      return { ...state, recurrenceRule: action.recurrenceRule };
     case FormStateActionType.reset:
       return { ...state, ...defaultFormState };
 

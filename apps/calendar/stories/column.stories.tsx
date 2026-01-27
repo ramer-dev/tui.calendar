@@ -3,7 +3,7 @@
 import type { ComponentProps } from 'preact';
 import { h } from 'preact';
 
-import type { StoryFn } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { Column } from '@src/components/timeGrid/column';
 import { cls } from '@src/helpers/css';
@@ -12,7 +12,13 @@ import TZDate from '@src/time/date';
 
 import type { PropsWithChildren } from '@t/components/common';
 
-export default { title: 'Components/Column', component: Column };
+const meta: Meta<typeof Column> = {
+  title: 'Components/Column',
+  component: Column,
+};
+
+export default meta;
+type Story = StoryObj<typeof Column>;
 
 function Wrapper({ children }: PropsWithChildren) {
   return (
@@ -28,18 +34,20 @@ function getTimeGridData() {
   return createTimeGridData(weekDates, { hourStart: 0, hourEnd: 24, timeStep: [0,30] });
 }
 
-const Template: StoryFn<ComponentProps<typeof Column>> = (args) => (
+const Template = (args: ComponentProps<typeof Column>) => (
   <Wrapper>
     <Column {...args} />
   </Wrapper>
 );
 
-export const Default = Template.bind({});
-Default.args = {
-  columnDate: new TZDate(),
-  timeGridData: getTimeGridData(),
-  totalUIModels: [],
-  columnWidth: '20%',
+export const Default: Story = {
+  render: Template,
+  args: {
+    columnDate: new TZDate(),
+    timeGridData: getTimeGridData(),
+    totalUIModels: [],
+    columnWidth: '20%',
+  },
 };
 
 // const getBackgroundEvents = () => {

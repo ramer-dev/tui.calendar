@@ -1,65 +1,49 @@
-const path = require('path');
 
-module.exports = {
-  core: {
-    builder: 'webpack5',
-  },
-  stories: ['../**/*.stories.@(ts|tsx)'],
-  babel: async (config) => {
-    // Replace storybook babel preset & plugins with custom ones
-    config.presets.splice(config.presets.length - 1, 1, [
-      require.resolve('@babel/preset-typescript'),
-      { jsxPragma: 'h', jsxPragmaFrag: 'Fragment' },
-    ]);
-    config.plugins.splice(config.plugins.length - 1, 1, [
-      require.resolve('@babel/plugin-transform-react-jsx'),
-      { pragma: 'h', pragmaFrag: 'Fragment' },
-      'preset',
-    ]);
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-    return config;
-  },
-  webpackFinal: async (config) => {
-    config.module.rules = config.module.rules
-      .filter((rule) => !(rule?.test?.test('.css') ?? false))
-      .concat([
-        {
-          test: /\.css$/,
-          include: /node_modules/,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 1,
-              },
-            },
-          ],
-        },
-        {
-          test: /\.css$/,
-          exclude: /node_modules/,
-          sideEffects: true,
-          use: [
-            require.resolve('style-loader'),
-            {
-              loader: require.resolve('css-loader'),
-              options: {
-                importLoaders: 1,
-              },
-            },
-            require.resolve('postcss-loader'),
-          ],
-        },
-      ]);
+/**
+ * This function is used to resolve the absolute path of a package.
+ * It is needed in projects that use Yarn PnP or are set up within a monorepo.
+ */
+function getAbsolutePath(value) {
+  return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
+}
 
-    Object.assign(config.resolve.alias, {
-      'core-js/modules': path.resolve(__dirname, '../../../node_modules/core-js/modules'),
-      '@src': path.resolve(__dirname, '../src/'),
-      '@t': path.resolve(__dirname, '../src/types/'),
-      '@stories': path.resolve(__dirname, '../stories/'),
-    });
+/** @type { import('@storybook/preact-vite').StorybookConfig } */
+const config = {
+  stories: ['../stories/**/*.stories.@(ts|tsx)', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+  // addons: [
+  //   '@storybook/addon-onboarding',
+  //   '@storybook/addon-links',
+  //   '@storybook/addon-essentials',
+  //   '@chromatic-com/storybook',
+  //   '@storybook/addon-interactions',
+  // ],
+  framework: getAbsolutePath('@storybook/preact-vite'),
+  async viteFinal(config, { configType }) {
+    const path = await import('path');
+    const { default: pathDefault } = path;
+    const configDir = pathDefault.dirname(fileURLToPath(import.meta.url));
+
+    // alias 설정
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'core-js/modules': pathDefault.resolve(configDir, '../../../node_modules/core-js/modules'),
+      '@modules': pathDefault.resolve(configDir, '../../../../node_modules/'),
+      '@src': pathDefault.resolve(configDir, '../src/'),
+      '@t': pathDefault.resolve(configDir, '../src/types/'),
+      '@stories': pathDefault.resolve(configDir, '../stories/'),
+    };
+
+    // esbuild 설정 (Preact JSX 사용)
+    config.esbuild = config.esbuild || {};
+    config.esbuild.jsxFactory = 'h';
+    config.esbuild.jsxFragment = 'Fragment';
 
     return config;
   },
 };
+
+export default config;

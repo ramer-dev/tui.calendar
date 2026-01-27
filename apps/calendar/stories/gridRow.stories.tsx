@@ -1,6 +1,6 @@
 import { h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact-vite';
 
 import { OtherGridRow } from '@src/components/dayGridWeek/otherGridRow';
 import { Layout } from '@src/components/layout';
@@ -16,11 +16,14 @@ import { createRandomEventModelsForMonth } from '@stories/util/randomEvents';
 
 import type { CalendarData } from '@t/events';
 
-export default {
+const meta: Meta<typeof OtherGridRow> = {
   title: 'Components/WeekGridRow',
   component: OtherGridRow,
   args: { primary: true },
 };
+
+export default meta;
+type Story = StoryObj<typeof OtherGridRow>;
 
 const events = createRandomEventModelsForMonth(40);
 
@@ -36,7 +39,7 @@ const dayGridEvents = getWeekViewEvents(weekDates, calendarData, {
   weekEndDate: last(weekDates),
 });
 
-const Template: Story = (args) => {
+const Template = (args: any) => {
   const { cellWidthMap } = getRowStyleInfo(weekDates.length, true, 0, true);
 
   return (
@@ -56,6 +59,7 @@ const Template: Story = (args) => {
   );
 };
 
-export const milestone = Template.bind({});
-
-milestone.storyName = 'random events milestone';
+export const milestone: Story = {
+  render: Template,
+  name: 'random events milestone',
+};

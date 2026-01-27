@@ -1,6 +1,6 @@
 import { h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { Day } from '@src/components/view/day';
 import EventModel from '@src/model/eventModel';
@@ -10,7 +10,13 @@ import { addDate } from '@src/time/datetime';
 import { ProviderWrapper } from '@stories/util/providerWrapper';
 import { createRandomEventModelsForMonth, createRandomEvents } from '@stories/util/randomEvents';
 
-export default { title: 'Views/DayView', component: Day };
+const meta: Meta<typeof Day> = {
+  title: 'Views/DayView',
+  component: Day,
+};
+
+export default meta;
+type Story = StoryObj<typeof Day>;
 
 function createTimeGridEvents() {
   const today = new TZDate();
@@ -20,16 +26,20 @@ function createTimeGridEvents() {
   return createRandomEvents('week', start, end).map((event) => new EventModel(event));
 }
 
-const Template: Story = (args) => (
+const Template = (args: any) => (
   <ProviderWrapper options={args.options} events={args.events}>
     <Day />
   </ProviderWrapper>
 );
 
-export const basic = Template.bind({});
+export const basic: Story = {
+  render: Template,
+};
 
-export const randomEvents = Template.bind({});
-randomEvents.args = {
-  events: [...createRandomEventModelsForMonth(40), ...createTimeGridEvents()],
-  options: { useFormPopup: true, useDetailPopup: true },
+export const randomEvents: Story = {
+  render: Template,
+  args: {
+    events: [...createRandomEventModelsForMonth(40), ...createTimeGridEvents()],
+    options: { useFormPopup: true, useDetailPopup: true },
+  },
 };

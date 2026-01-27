@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'preact';
 import { h } from 'preact';
 
-import type { StoryFn } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { TimeGrid } from '@src/components/timeGrid/timeGrid';
 import { cls, toPercent } from '@src/helpers/css';
@@ -16,7 +16,13 @@ import { createRandomEvents } from '@stories/util/randomEvents';
 
 import type { EventObject } from '@t/events';
 
-export default { title: 'Components/TimeGrid', component: TimeGrid };
+const meta: Meta<typeof TimeGrid> = {
+  title: 'Components/TimeGrid',
+  component: TimeGrid,
+};
+
+export default meta;
+type Story = StoryObj<typeof TimeGrid>;
 
 function toThisWeek(date: TZDate) {
   const today = toStartOfDay(new TZDate());
@@ -90,7 +96,7 @@ function getTimeGridData() {
 }
 
 type TimeGridProps = ComponentProps<typeof TimeGrid>;
-const Template: StoryFn<TimeGridProps> = (args) => (
+const Template = (args: TimeGridProps) => (
   <ProviderWrapper>
     <div className={cls('layout')} style={{ height: toPercent(100) }}>
       <TimeGrid {...args} />
@@ -98,13 +104,6 @@ const Template: StoryFn<TimeGridProps> = (args) => (
   </ProviderWrapper>
 );
 
-export const Basic = Template.bind({});
-Basic.args = {
-  events: getEvents(),
-  timeGridData: getTimeGridData(),
-};
-
-export const RandomEvents = Template.bind({});
 const getRandomEvents = () => {
   const today = new TZDate();
   const start = addDate(new TZDate(), -today.getDay());
@@ -112,7 +111,19 @@ const getRandomEvents = () => {
   const data: EventObject[] = createRandomEvents('week', start, end);
   return createEventModels(data);
 };
-RandomEvents.args = {
-  events: getRandomEvents(),
-  timeGridData: getTimeGridData(),
+
+export const Basic: Story = {
+  render: Template,
+  args: {
+    events: getEvents(),
+    timeGridData: getTimeGridData(),
+  },
+};
+
+export const RandomEvents: Story = {
+  render: Template,
+  args: {
+    events: getRandomEvents(),
+    timeGridData: getTimeGridData(),
+  },
 };

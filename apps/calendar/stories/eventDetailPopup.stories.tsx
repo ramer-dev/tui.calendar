@@ -1,6 +1,6 @@
 import { Fragment, h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { EventDetailPopup } from '@src/components/popup/eventDetailPopup';
 import { EventFormPopup } from '@src/components/popup/eventFormPopup';
@@ -13,10 +13,13 @@ import { ProviderWrapper } from '@stories/util/providerWrapper';
 import type { PropsWithChildren } from '@t/components/common';
 import type { EventDetailPopupParam } from '@t/store';
 
-export default {
+const meta: Meta<typeof EventDetailPopup> = {
   component: EventDetailPopup,
   title: 'Popups/EventDetailPopup',
 };
+
+export default meta;
+type Story = StoryObj<typeof EventDetailPopup>;
 
 function Wrapper({ children, event, eventRect }: PropsWithChildren<EventDetailPopupParam>) {
   const { showDetailPopup } = useDispatch('popup');
@@ -31,7 +34,7 @@ function Wrapper({ children, event, eventRect }: PropsWithChildren<EventDetailPo
   return <Fragment>{children}</Fragment>;
 }
 
-const Template: Story<EventDetailPopupParam> = ({ event }) => (
+const Template = ({ event }: EventDetailPopupParam) => (
   <ProviderWrapper>
     <Wrapper
       event={event}
@@ -48,21 +51,23 @@ const Template: Story<EventDetailPopupParam> = ({ event }) => (
   </ProviderWrapper>
 );
 
-export const EventDetailPopupWithCalendars = Template.bind({});
-EventDetailPopupWithCalendars.args = {
-  event: new EventModel({
-    id: 'id',
-    calendarId: 'calendar id',
-    title: 'title',
-    body: 'body',
-    start: new TZDate(),
-    end: new TZDate(),
-    isAllday: false,
-    location: 'location',
-    attendees: ['attendee1', 'attendee2'],
-    recurrenceRule: 'recurrence rule',
-    isReadOnly: false,
-    backgroundColor: '#03bd9e',
-    state: 'Busy',
-  }),
+export const EventDetailPopupWithCalendars: Story = {
+  render: Template,
+  args: {
+    event: new EventModel({
+      id: 'id',
+      calendarId: 'calendar id',
+      title: 'title',
+      body: 'body',
+      start: new TZDate(),
+      end: new TZDate(),
+      isAllday: false,
+      location: 'location',
+      attendees: ['attendee1', 'attendee2'],
+      recurrenceRule: 'recurrence rule',
+      isReadOnly: false,
+      backgroundColor: '#03bd9e',
+      state: 'Busy',
+    }),
+  },
 };
