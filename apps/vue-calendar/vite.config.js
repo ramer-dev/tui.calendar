@@ -5,6 +5,11 @@ import path from 'path';
 
 const commonConfig = {
   plugins: [createVuePlugin()],
+  resolve: {
+    alias: {
+      '@toast-ui/calendar': path.resolve(__dirname, '../calendar/src'),
+    },
+  },
 };
 
 export default defineConfig(({ command, mode }) => {
@@ -13,7 +18,9 @@ export default defineConfig(({ command, mode }) => {
     return {
       ...commonConfig,
       resolve: {
+        ...commonConfig.resolve,
         alias: {
+          ...commonConfig.resolve.alias,
           vue: 'vue/dist/vue',
         },
       },
