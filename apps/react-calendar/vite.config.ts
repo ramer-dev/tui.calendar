@@ -10,6 +10,11 @@ const commonConfig: UserConfigExport = {
       include: '**/*.tsx',
     }),
   ],
+  resolve: {
+    alias: {
+      '@toast-ui/calendar': path.resolve(__dirname, '../calendar/src'),
+    },
+  },
 };
 
 export default defineConfig(({ command, mode }) => {
