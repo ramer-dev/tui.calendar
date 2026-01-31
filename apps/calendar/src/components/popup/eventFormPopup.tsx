@@ -214,6 +214,7 @@ export function EventFormPopup() {
             formStateDispatch={formStateDispatch}
             ref={datePickerRef}
           />
+          <LocationInputBox location={formState.location} formStateDispatch={formStateDispatch} />
           <EventStateSelector eventState={formState.state} formStateDispatch={formStateDispatch} />
           <ClosePopupButton type="form" close={close} />
           <PopupSection>

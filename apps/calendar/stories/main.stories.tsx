@@ -1,6 +1,6 @@
 import { h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { Main } from '@src/components/view/main';
 import { useDispatch } from '@src/contexts/calendarStore';
@@ -11,7 +11,13 @@ import { createRandomEventModelsForMonth } from '@stories/util/randomEvents';
 
 import type { PropsWithChildren } from '@t/components/common';
 
-export default { title: 'Views/Main', component: Main };
+const meta: Meta<typeof Main> = {
+  title: 'Views/Main',
+  component: Main,
+};
+
+export default meta;
+type Story = StoryObj<typeof Main>;
 
 const style = {
   position: 'absolute',
@@ -41,7 +47,7 @@ const Toolbar = () => {
   );
 };
 
-const Template: Story = (args) => (
+const Template = (args: any) => (
   <ProviderWrapper options={args.options} events={args.events}>
     <Wrapper>
       <Toolbar />
@@ -50,8 +56,10 @@ const Template: Story = (args) => (
   </ProviderWrapper>
 );
 
-export const Default = Template.bind({});
-Default.args = {
-  events,
-  options: { useFormPopup: true, useDetailPopup: true },
+export const Default: Story = {
+  render: Template,
+  args: {
+    events,
+    options: { useFormPopup: true, useDetailPopup: true },
+  },
 };

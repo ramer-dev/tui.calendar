@@ -1,6 +1,6 @@
 import { Fragment, h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { EventFormPopup } from '@src/components/popup/eventFormPopup';
 import { useDispatch } from '@src/contexts/calendarStore';
@@ -13,10 +13,13 @@ import type { PropsWithChildren } from '@t/components/common';
 import type { CalendarInfo } from '@t/options';
 import type { EventFormPopupParam } from '@t/store';
 
-export default {
+const meta: Meta<typeof EventFormPopup> = {
   component: EventFormPopup,
   title: 'Popups/EventFormPopup',
 };
+
+export default meta;
+type Story = StoryObj<typeof EventFormPopup>;
 
 interface EventFormPopupStoryProps extends EventFormPopupParam {
   calendars?: CalendarInfo[];
@@ -46,7 +49,7 @@ function Wrapper({
   return <Fragment>{children}</Fragment>;
 }
 
-const Template: Story<EventFormPopupStoryProps> = ({
+const Template = ({
   calendars,
   title,
   location,
@@ -54,7 +57,7 @@ const Template: Story<EventFormPopupStoryProps> = ({
   end,
   isAllday = false,
   isPrivate = false,
-}) => (
+}: EventFormPopupStoryProps) => (
   <ProviderWrapper options={{ calendars }}>
     <Wrapper
       title={title}
@@ -70,15 +73,19 @@ const Template: Story<EventFormPopupStoryProps> = ({
   </ProviderWrapper>
 );
 
-export const EventFormPopupWithCalendars = Template.bind({});
-EventFormPopupWithCalendars.args = {
-  start: new TZDate(),
-  end: new TZDate(),
-  calendars: mockCalendars,
+export const EventFormPopupWithCalendars: Story = {
+  render: Template,
+  args: {
+    start: new TZDate(),
+    end: new TZDate(),
+    calendars: mockCalendars,
+  },
 };
 
-export const EventFormPopupWithoutCalendars = Template.bind({});
-EventFormPopupWithoutCalendars.args = {
-  start: new TZDate(),
-  end: new TZDate(),
+export const EventFormPopupWithoutCalendars: Story = {
+  render: Template,
+  args: {
+    start: new TZDate(),
+    end: new TZDate(),
+  },
 };

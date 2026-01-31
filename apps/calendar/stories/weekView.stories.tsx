@@ -1,6 +1,6 @@
 import { h } from 'preact';
 
-import type { Story } from '@storybook/preact';
+import type { Meta, StoryObj } from '@storybook/preact';
 
 import { Week } from '@src/components/view/week';
 import EventModel from '@src/model/eventModel';
@@ -10,7 +10,13 @@ import { addDate, Day } from '@src/time/datetime';
 import { ProviderWrapper } from '@stories/util/providerWrapper';
 import { createRandomEventModelsForMonth, createRandomEvents } from '@stories/util/randomEvents';
 
-export default { title: 'Views/WeekView', component: Week };
+const meta: Meta<typeof Week> = {
+  title: 'Views/WeekView',
+  component: Week,
+};
+
+export default meta;
+type Story = StoryObj<typeof Week>;
 
 function createTimeGridEvents() {
   const today = new TZDate();
@@ -20,33 +26,41 @@ function createTimeGridEvents() {
   return createRandomEvents('week', start, end).map((event) => new EventModel(event));
 }
 
-const Template: Story = (args) => (
+const Template = (args: any) => (
   <ProviderWrapper options={args.options} events={args.events}>
     <Week />
   </ProviderWrapper>
 );
 
-export const basic = Template.bind({});
+export const basic: Story = {
+  render: Template,
+};
 
-export const MondayStart = Template.bind({});
-MondayStart.args = {
-  options: {
-    week: {
-      startDayOfWeek: Day.MON,
+export const MondayStart: Story = {
+  render: Template,
+  args: {
+    options: {
+      week: {
+        startDayOfWeek: Day.MON,
+      },
     },
   },
 };
 
-export const WorkWeek = Template.bind({});
-WorkWeek.args = {
-  options: {
-    week: {
-      workweek: true,
+export const WorkWeek: Story = {
+  render: Template,
+  args: {
+    options: {
+      week: {
+        workweek: true,
+      },
     },
   },
 };
 
-export const RandomEvents = Template.bind({});
-RandomEvents.args = {
-  events: [...createRandomEventModelsForMonth(40), ...createTimeGridEvents()],
+export const RandomEvents: Story = {
+  render: Template,
+  args: {
+    events: [...createRandomEventModelsForMonth(40), ...createTimeGridEvents()],
+  },
 };

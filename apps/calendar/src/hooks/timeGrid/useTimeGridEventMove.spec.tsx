@@ -19,9 +19,9 @@ describe('useTimeGridEventMove', () => {
   let eventModel: EventModel;
   let eventUIModel: EventUIModel;
   const rows = getWeekDates(createDate(2021, 2, 14), {
-    startDayOfWeek: Day.SUN,
+    startDayOfWeek: Day.SUN,  
   });
-  const timeGridData = createTimeGridData(rows, { hourStart: 0, hourEnd: 24 });
+  const timeGridData = createTimeGridData(rows, { hourStart: 0, hourEnd: 24, timeStep: [0,30] });
   const DEFAULT_CONTAINER_WIDTH = 70;
   const DEFAULT_CONTAINER_HEIGHT = 480;
 

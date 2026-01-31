@@ -28,7 +28,7 @@ module.exports = {
     '@typescript-eslint',
     'jest',
   ],
-  extends: defaultExtends,
+  extends: ['tui', 'prettier', 'plugin:@typescript-eslint/recommended', 'plugin:react/recommended', 'plugin:prettier/recommended', 'plugin:storybook/recommended'],
   settings: {
     react: {
       pragma: 'h',

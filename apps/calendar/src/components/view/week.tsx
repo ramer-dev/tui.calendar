@@ -59,7 +59,7 @@ export function Week() {
   const [timePanel, setTimePanelRef] = useDOMNode<HTMLDivElement>();
 
   const weekOptions = options.week as Required<WeekOptions>;
-  const { narrowWeekend, startDayOfWeek, workweek, hourStart, hourEnd, eventView, taskView } =
+  const { narrowWeekend, startDayOfWeek, workweek, hourStart, hourEnd, eventView, taskView, timeStep} =
     weekOptions;
   const weekDates = useMemo(() => getWeekDates(renderDate, weekOptions), [renderDate, weekOptions]);
   const dayNames = getDayNames(weekDates, options.week?.dayNames ?? []);
@@ -96,8 +96,9 @@ export function Week() {
         hourStart,
         hourEnd,
         narrowWeekend,
+        timeStep
       }),
-    [hourEnd, hourStart, narrowWeekend, weekDates]
+    [hourEnd, hourStart, narrowWeekend, timeStep, weekDates]
   );
 
   const activePanels = getActivePanels(taskView, eventView);
