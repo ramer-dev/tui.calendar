@@ -8,6 +8,7 @@ import { capitalize } from '@src/utils/string';
 import { isNil, isPresent } from '@src/utils/type';
 
 import type { EventObjectWithDefaultValues } from '@t/events';
+import type { I18nStrings } from '@t/i18n';
 import type {
     Template,
     TemplateMonthDayName,
@@ -18,257 +19,274 @@ import type {
     TemplateWeekDayName,
 } from '@t/template';
 
+import { getI18nStrings } from '@src/i18n';
+
 const SIXTY_MINUTES = 60;
 
-export const templates: Template = {
-    milestone(model: EventObjectWithDefaultValues) {
-        const classNames = cls('icon', 'ic-milestone');
+/**
+ * 템플릿을 생성하는 함수
+ * @param i18nStrings - 다국어 문자열 객체 (선택적)
+ * @returns Template 객체
+ */
+export function createTemplates(i18nStrings?: I18nStrings): Template {
+    // i18n 문자열이 제공되지 않으면 기본값(영어) 사용
+    const t = i18nStrings || getI18nStrings('en');
 
-        return (
-            <Fragment>
-                <span className={classNames} />
-                <span
-                    style={{
-                        backgroundColor: model.backgroundColor,
-                    }}
-                >
-                    {stripTags(model.title)}
-                </span>
-            </Fragment>
-        );
-    },
+    return {
+        milestone(model: EventObjectWithDefaultValues) {
+            const classNames = cls('icon', 'ic-milestone');
 
-    milestoneTitle() {
-        return <span className={cls('left-content')}>Milestone</span>;
-    },
-
-    task(model: EventObjectWithDefaultValues) {
-        return `#${model.title}`;
-    },
-
-    taskTitle() {
-        return <span className={cls('left-content')}>Task</span>;
-    },
-
-    alldayTitle() {
-        return <span className={cls('left-content')}>All Day</span>;
-    },
-
-    allday(model: EventObjectWithDefaultValues) {
-        return stripTags(model.title);
-    },
-
-    time(model: EventObjectWithDefaultValues) {
-        const { start, title } = model;
-
-        if (start) {
             return (
-                <span>
-                    <strong>{toFormat(start, 'HH:mm')}</strong>&nbsp;<span>{stripTags(title)}</span>
-                </span>
+                <Fragment>
+                    <span className={classNames} />
+                    <span
+                        style={{
+                            backgroundColor: model.backgroundColor,
+                        }}
+                    >
+                        {stripTags(model.title)}
+                    </span>
+                </Fragment>
             );
-        }
+        },
 
-        return stripTags(title);
-    },
+        milestoneTitle() {
+            return <span className={cls('left-content')}>{t.milestoneTitle}</span>;
+        },
 
-    goingDuration(model: EventObjectWithDefaultValues) {
-        const { goingDuration } = model;
-        const hour = Math.floor(goingDuration / SIXTY_MINUTES);
-        const minutes = goingDuration % SIXTY_MINUTES;
+        task(model: EventObjectWithDefaultValues) {
+            return `#${model.title}`;
+        },
 
-        return `GoingTime ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
-    },
+        taskTitle() {
+            return <span className={cls('left-content')}>{t.taskTitle}</span>;
+        },
 
-    comingDuration(model: EventObjectWithDefaultValues) {
-        const { comingDuration } = model;
-        const hour = Math.floor(comingDuration / SIXTY_MINUTES);
-        const minutes = comingDuration % SIXTY_MINUTES;
+        alldayTitle() {
+            return <span className={cls('left-content')}>{t.alldayTitle}</span>;
+        },
 
-        return `ComingTime ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
-    },
+        allday(model: EventObjectWithDefaultValues) {
+            return stripTags(model.title);
+        },
 
-    monthMoreTitleDate(moreTitle: TemplateMoreTitleDate) {
-        const { date, day } = moreTitle;
+        time(model: EventObjectWithDefaultValues) {
+            const { start, title } = model;
 
-        const classNameDay = cls('more-title-date');
-        const classNameDayLabel = cls('more-title-day');
-        const dayName = capitalize(getDayName(day));
+            if (start) {
+                return (
+                    <span>
+                        <strong>{toFormat(start, 'HH:mm')}</strong>&nbsp;<span>{stripTags(title)}</span>
+                    </span>
+                );
+            }
 
-        return (
-            <Fragment>
-                <span className={classNameDay}>{date}</span>
-                <span className={classNameDayLabel}>{dayName}</span>
-            </Fragment>
-        );
-    },
+            return stripTags(title);
+        },
 
-    monthMoreClose() {
-        return '';
-    },
+        goingDuration(model: EventObjectWithDefaultValues) {
+            const { goingDuration } = model;
+            const hour = Math.floor(goingDuration / SIXTY_MINUTES);
+            const minutes = goingDuration % SIXTY_MINUTES;
 
-    monthGridHeader(model: TemplateMonthGrid) {
-        const date = parseInt(model.date.split('-')[2], 10);
-        const classNames = cls('weekday-grid-date', { 'weekday-grid-date-decorator': model.isToday });
+            return `${t.goingDuration} ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
+        },
 
-        return <span className={classNames}>{date}</span>;
-    },
+        comingDuration(model: EventObjectWithDefaultValues) {
+            const { comingDuration } = model;
+            const hour = Math.floor(comingDuration / SIXTY_MINUTES);
+            const minutes = comingDuration % SIXTY_MINUTES;
 
-    monthGridHeaderExceed(hiddenEvents: number) {
-        const className = cls('weekday-grid-more-events');
+            return `${t.comingDuration} ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
+        },
 
-        return <span className={className}>{hiddenEvents} more</span>;
-    },
+        monthMoreTitleDate(moreTitle: TemplateMoreTitleDate) {
+            const { date, day } = moreTitle;
 
-    monthGridFooter(_model: TemplateMonthGrid) {
-        return '';
-    },
+            const classNameDay = cls('more-title-date');
+            const classNameDayLabel = cls('more-title-day');
+            const dayName = capitalize(getDayName(day));
 
-    monthGridFooterExceed(_hiddenEvents: number) {
-        return '';
-    },
+            return (
+                <Fragment>
+                    <span className={classNameDay}>{date}</span>
+                    <span className={classNameDayLabel}>{dayName}</span>
+                </Fragment>
+            );
+        },
 
-    monthDayName(model: TemplateMonthDayName) {
-        return model.label;
-    },
+        monthMoreClose() {
+            return '';
+        },
 
-    weekDayName(model: TemplateWeekDayName) {
-        const classDate = cls('day-name__date');
-        const className = cls('day-name__name');
+        monthGridHeader(model: TemplateMonthGrid) {
+            const date = parseInt(model.date.split('-')[2], 10);
+            const classNames = cls('weekday-grid-date', { 'weekday-grid-date-decorator': model.isToday });
 
-        return (
-            <Fragment>
-                <span className={classDate}>{model.date}</span>&nbsp;&nbsp;
-                <span className={className}>{model.dayName}</span>
-            </Fragment>
-        );
-    },
+            return <span className={classNames}>{date}</span>;
+        },
 
-    weekGridFooterExceed(hiddenEvents: number) {
-        return `+${hiddenEvents}`;
-    },
+        monthGridHeaderExceed(hiddenEvents: number) {
+            const className = cls('weekday-grid-more-events');
 
-    collapseBtnTitle() {
-        const className = cls('collapse-btn-icon');
+            return <span className={className}>{hiddenEvents} {t.monthGridHeaderExceed}</span>;
+        },
 
-        return <span className={className} />;
-    },
+        monthGridFooter(_model: TemplateMonthGrid) {
+            return '';
+        },
 
-    timezoneDisplayLabel({ displayLabel, timezoneOffset }: TemplateTimezone) {
-        if (isNil(displayLabel) && isPresent(timezoneOffset)) {
-            const sign = timezoneOffset < 0 ? '-' : '+';
-            const hours = Math.abs(timezoneOffset / SIXTY_MINUTES);
-            const minutes = Math.abs(timezoneOffset % SIXTY_MINUTES);
+        monthGridFooterExceed(_hiddenEvents: number) {
+            return '';
+        },
 
-            return `GMT${sign}${leadingZero(hours, 2)}:${leadingZero(minutes, 2)}`;
-        }
+        monthDayName(model: TemplateMonthDayName) {
+            return model.label;
+        },
 
-        return displayLabel as string;
-    },
+        weekDayName(model: TemplateWeekDayName) {
+            const classDate = cls('day-name__date');
+            const className = cls('day-name__name');
 
-    timegridDisplayPrimaryTime(props: TemplateNow) {
-        const { time } = props;
+            return (
+                <Fragment>
+                    <span className={classDate}>{model.date}</span>&nbsp;&nbsp;
+                    <span className={className}>{model.dayName}</span>
+                </Fragment>
+            );
+        },
 
-        return toFormat(time, 'hh tt');
-    },
+        weekGridFooterExceed(hiddenEvents: number) {
+            return `+${hiddenEvents}`;
+        },
 
-    timegridDisplayTime(props: TemplateNow) {
-        const { time } = props;
+        collapseBtnTitle() {
+            const className = cls('collapse-btn-icon');
 
-        return toFormat(time, 'HH:mm');
-    },
+            return <span className={className} />;
+        },
 
-    timegridNowIndicatorLabel(timezone: TemplateNow) {
-        const { time, format = 'HH:mm' } = timezone;
+        timezoneDisplayLabel({ displayLabel, timezoneOffset }: TemplateTimezone) {
+            if (isNil(displayLabel) && isPresent(timezoneOffset)) {
+                const sign = timezoneOffset < 0 ? '-' : '+';
+                const hours = Math.abs(timezoneOffset / SIXTY_MINUTES);
+                const minutes = Math.abs(timezoneOffset % SIXTY_MINUTES);
 
-        return toFormat(time, format);
-    },
+                return `GMT${sign}${leadingZero(hours, 2)}:${leadingZero(minutes, 2)}`;
+            }
 
-    popupIsAllday() {
-        return 'All day';
-    },
+            return displayLabel as string;
+        },
 
-    popupStateFree() {
-        return 'Free';
-    },
+        timegridDisplayPrimaryTime(props: TemplateNow) {
+            const { time } = props;
 
-    popupStateBusy() {
-        return 'Busy';
-    },
+            return toFormat(time, 'hh tt');
+        },
 
-    titlePlaceholder() {
-        return 'Subject';
-    },
+        timegridDisplayTime(props: TemplateNow) {
+            const { time } = props;
 
-    locationPlaceholder() {
-        return 'Location';
-    },
+            return toFormat(time, 'HH:mm');
+        },
 
-    recurrencePlaceholder() {
-        return 'Recurrence';
-    },
+        timegridNowIndicatorLabel(timezone: TemplateNow) {
+            const { time, format = 'HH:mm' } = timezone;
 
-    startDatePlaceholder() {
-        return 'Start date';
-    },
+            return toFormat(time, format);
+        },
 
-    endDatePlaceholder() {
-        return 'End date';
-    },
+        popupIsAllday() {
+            return t.popupIsAllday;
+        },
 
-    popupSave() {
-        return 'Save';
-    },
+        popupStateFree() {
+            return t.popupStateFree;
+        },
 
-    popupUpdate() {
-        return 'Update';
-    },
+        popupStateBusy() {
+            return t.popupStateBusy;
+        },
 
-    popupEdit() {
-        return 'Edit';
-    },
+        titlePlaceholder() {
+            return t.titlePlaceholder;
+        },
 
-    popupDelete() {
-        return 'Delete';
-    },
+        locationPlaceholder() {
+            return t.locationPlaceholder;
+        },
 
-    popupDetailTitle({ title }: EventObjectWithDefaultValues) {
-        return title;
-    },
+        recurrencePlaceholder() {
+            return t.recurrencePlaceholder;
+        },
 
-    popupDetailDate({ isAllday, start, end }: EventObjectWithDefaultValues) {
-        const dayFormat = 'YYYY.MM.DD';
-        const timeFormat = 'hh:mm tt';
-        const detailFormat = `${dayFormat} ${timeFormat}`;
-        const startDate = toFormat(start, isAllday ? dayFormat : timeFormat);
-        const endDateFormat = isSameDate(start, end) ? timeFormat : detailFormat;
+        startDatePlaceholder() {
+            return t.startDatePlaceholder;
+        },
 
-        if (isAllday) {
-            return `${startDate}${isSameDate(start, end) ? '' : ` - ${toFormat(end, dayFormat)}`}`;
-        }
+        endDatePlaceholder() {
+            return t.endDatePlaceholder;
+        },
 
-        return `${toFormat(start, detailFormat)} - ${toFormat(end, endDateFormat)}`;
-    },
+        popupSave() {
+            return t.popupSave;
+        },
 
-    popupDetailLocation({ location }: EventObjectWithDefaultValues) {
-        return location;
-    },
+        popupUpdate() {
+            return t.popupUpdate;
+        },
 
-    popupDetailAttendees({ attendees = [] }: EventObjectWithDefaultValues) {
-        return attendees.join(', ');
-    },
+        popupEdit() {
+            return t.popupEdit;
+        },
 
-    popupDetailState({ state }: EventObjectWithDefaultValues) {
-        return state || 'Busy';
-    },
+        popupDelete() {
+            return t.popupDelete;
+        },
 
-    popupDetailRecurrenceRule({ recurrenceRule }: EventObjectWithDefaultValues) {
-        return recurrenceRule;
-    },
+        popupDetailTitle({ title }: EventObjectWithDefaultValues) {
+            return title;
+        },
 
-    popupDetailBody({ body }: EventObjectWithDefaultValues) {
-        return body;
-    },
-};
+        popupDetailDate({ isAllday, start, end }: EventObjectWithDefaultValues) {
+            const dayFormat = 'YYYY.MM.DD';
+            const timeFormat = 'hh:mm tt';
+            const detailFormat = `${dayFormat} ${timeFormat}`;
+            const startDate = toFormat(start, isAllday ? dayFormat : timeFormat);
+            const endDateFormat = isSameDate(start, end) ? timeFormat : detailFormat;
+
+            if (isAllday) {
+                return `${startDate}${isSameDate(start, end) ? '' : ` - ${toFormat(end, dayFormat)}`}`;
+            }
+
+            return `${toFormat(start, detailFormat)} - ${toFormat(end, endDateFormat)}`;
+        },
+
+        popupDetailLocation({ location }: EventObjectWithDefaultValues) {
+            return location;
+        },
+
+        popupDetailAttendees({ attendees = [] }: EventObjectWithDefaultValues) {
+            return attendees.join(', ');
+        },
+
+        popupDetailState({ state }: EventObjectWithDefaultValues) {
+            return state || t.popupStateBusy;
+        },
+
+        popupDetailRecurrenceRule({ recurrenceRule }: EventObjectWithDefaultValues) {
+            return recurrenceRule;
+        },
+
+        popupDetailBody({ body }: EventObjectWithDefaultValues) {
+            return body;
+        },
+    };
+}
+
+/**
+ * 기본 템플릿 (영어, 하위 호환성을 위해 유지)
+ */
+export const templates = createTemplates();
 
 export type TemplateName = keyof Template;
