@@ -7,6 +7,7 @@ import type Collection from '@src/utils/collection';
 
 import type { StyleProp } from '@t/components/common';
 import type { CalendarInfo } from '@t/options';
+import { RecurrenceRule } from './repeat';
 
 export type Matrix<T> = T[][];
 export type Matrix3d<T> = Matrix<T>[];
@@ -116,7 +117,7 @@ export interface EventObject {
   /**
    * Recurrence rule of the event
    */
-  recurrenceRule?: string;
+  recurrenceRule?: RecurrenceRule;
 
   /**
    * State of the event. The default is 'Busy'
