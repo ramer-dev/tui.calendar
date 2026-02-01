@@ -120,6 +120,11 @@ export interface EventObject {
   recurrenceRule?: RecurrenceRule;
 
   /**
+   * Determine whether the event is repeated
+   */
+  isRepeat?: boolean;
+
+  /**
    * State of the event. The default is 'Busy'
    */
   state?: EventState;

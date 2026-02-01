@@ -1,6 +1,7 @@
 import { useReducer } from 'preact/hooks';
 
 import type { EventObject, EventState } from '@t/events';
+import { RecurrenceRule } from '@src/types/repeat';
 
 export enum FormStateActionType {
   init = 'init',
@@ -11,6 +12,7 @@ export enum FormStateActionType {
   setAllday = 'setAllday',
   setState = 'setState',
   setRecurrenceRule = 'setRecurrenceRule',
+  setRepeat = 'setRepeat',
   reset = 'reset',
 }
 
@@ -22,7 +24,8 @@ type FormStateAction =
   | { type: FormStateActionType.setPrivate; isPrivate: boolean }
   | { type: FormStateActionType.setAllday; isAllday: boolean }
   | { type: FormStateActionType.setState; state: EventState }
-  | { type: FormStateActionType.setRecurrenceRule; recurrenceRule: string }
+  | { type: FormStateActionType.setRecurrenceRule; recurrenceRule?: RecurrenceRule }
+  | { type: FormStateActionType.setRepeat; isRepeat: boolean }
   | { type: FormStateActionType.reset };
 
 export type FormStateDispatcher = (action: FormStateAction) => void;
@@ -32,7 +35,8 @@ const defaultFormState: EventObject = {
   location: '',
   isAllday: false,
   isPrivate: false,
-  recurrenceRule: '',
+  isRepeat: false,
+  recurrenceRule: undefined,
   state: 'Busy',
 };
 
@@ -55,6 +59,8 @@ function formStateReducer(state: EventObject, action: FormStateAction): EventObj
       return { ...state, state: action.state };
     case FormStateActionType.setRecurrenceRule:
       return { ...state, recurrenceRule: action.recurrenceRule };
+    case FormStateActionType.setRepeat:
+      return { ...state, isRepeat: action.isRepeat };
     case FormStateActionType.reset:
       return { ...state, ...defaultFormState };
 
