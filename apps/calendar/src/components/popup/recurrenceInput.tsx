@@ -8,38 +8,38 @@ import { FormStateActionType } from '@src/hooks/popup/useFormState';
 import { useStringOnlyTemplate } from '@src/hooks/template/useStringOnlyTemplate';
 
 interface Props {
-  recurrence?: string;
-  formStateDispatch: FormStateDispatcher;
+    recurrence?: string;
+    formStateDispatch: FormStateDispatcher;
 }
 
 const classNames = {
-  popupSectionItem: cls('popup-section-item', 'popup-section-location'),
-  locationIcon: cls('icon', 'ic-location'),
-  content: cls('content'),
+    popupSectionItem: cls('popup-section-item', 'popup-section-location'),
+    locationIcon: cls('icon', 'ic-repeat-b'),
+    content: cls('content'),
 };
 
-export function recurrenceInputBox({ recurrence, formStateDispatch }: Props) {
-  const locationPlaceholder = useStringOnlyTemplate({
-    template: 'locationPlaceholder',
-    defaultValue: 'Location',
-  });
+export function RecurrenceInputBox({ recurrence, formStateDispatch }: Props) {
+    const locationPlaceholder = useStringOnlyTemplate({
+        template: 'recurrencePlaceholder',
+        defaultValue: 'Recurrence',
+    });
 
-  const handleRecurrenceChange: ChangeEventHandler<HTMLInputElement> = (e) => {
-    formStateDispatch({ type: FormStateActionType.setLocation, recurrence: e.currentTarget.value });
-  };
+    const handleRecurrenceChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        formStateDispatch({ type: FormStateActionType.setRecurrenceRule, recurrenceRule: e.currentTarget.value });
+    };
 
-  return (
-    <PopupSection>
-      <div className={classNames.popupSectionItem}>
-        <span className={classNames.locationIcon} />
-        <input
-          name="recurrence"
-          className={classNames.content}
-          placeholder={locationPlaceholder}
-          value={recurrence}
-          onChange={handleLocationChange}
-        />
-      </div>
-    </PopupSection>
-  );
+    return (
+        <PopupSection>
+            <div className={classNames.popupSectionItem}>
+                <span className={classNames.locationIcon} />
+                <input
+                    name="recurrence"
+                    className={classNames.content}
+                    placeholder={locationPlaceholder}
+                    value={recurrence}
+                    onChange={handleRecurrenceChange}
+                />
+            </div>
+        </PopupSection>
+    );
 }
