@@ -43,6 +43,8 @@ export function RecurrenceEndCondition({
   const datePickerInstanceRef = useRef<DateRangePicker | null>(null);
 
   useEffect(() => {
+    console.log('[RecurrenceEndCondition] useEffect 실행 - endType:', endType, 'until:', until);
+    
     if (
       endType === 'until' &&
       datePickerContainerRef.current &&
@@ -50,8 +52,11 @@ export function RecurrenceEndCondition({
       endPickerContainerRef.current &&
       endPickerInputRef.current
     ) {
+      console.log('[RecurrenceEndCondition] DatePicker 생성 시작');
+      
       // 기존 DatePicker 인스턴스가 있으면 제거
       if (datePickerInstanceRef.current) {
+        console.log('[RecurrenceEndCondition] 기존 DatePicker 제거');
         datePickerInstanceRef.current.destroy();
         datePickerInstanceRef.current = null;
       }
@@ -64,6 +69,8 @@ export function RecurrenceEndCondition({
       } else {
         initialDate = new Date();
       }
+
+      console.log('[RecurrenceEndCondition] DatePicker 생성 - initialDate:', initialDate);
 
       // DateRangePicker 생성 (단일 날짜 선택을 위해 startpicker와 endpicker를 같은 값으로 설정)
       datePickerInstanceRef.current = DatePicker.createRangePicker({
@@ -81,8 +88,11 @@ export function RecurrenceEndCondition({
         usageStatistics,
       });
 
+      console.log('[RecurrenceEndCondition] DatePicker 생성 완료');
+
       // 날짜 변경 이벤트 리스너 (startpicker의 날짜만 사용)
       datePickerInstanceRef.current.on('change:start', () => {
+        console.log('[RecurrenceEndCondition] change:start 이벤트 발생');
         const startDate = datePickerInstanceRef.current?.getStartDate();
         if (startDate) {
           try {
@@ -96,25 +106,26 @@ export function RecurrenceEndCondition({
               const month = String(date.getMonth() + 1).padStart(2, '0');
               const day = String(date.getDate()).padStart(2, '0');
               const dateString = `${year}-${month}-${day}`;
-              console.log('날짜 선택됨:', dateString, '원본:', date);
+              console.log('[RecurrenceEndCondition] 날짜 선택됨:', dateString, '원본:', date);
               onUntilChange(dateString);
             } else {
-              console.error('Invalid date from date picker:', startDate, date);
+              console.error('[RecurrenceEndCondition] Invalid date from date picker:', startDate, date);
             }
           } catch (error) {
-            console.error('날짜 변환 오류:', error, 'startDate:', startDate);
+            console.error('[RecurrenceEndCondition] 날짜 변환 오류:', error, 'startDate:', startDate);
           }
         }
       });
 
       return () => {
+        console.log('[RecurrenceEndCondition] cleanup - DatePicker 제거');
         if (datePickerInstanceRef.current) {
           datePickerInstanceRef.current.destroy();
           datePickerInstanceRef.current = null;
         }
       };
     }
-  }, [endType, until, onUntilChange, usageStatistics]);
+  }, [endType, until, usageStatistics]); // onUntilChange를 dependency에서 제거하여 무한 루프 방지
 
   // endType이 'until'이 아닐 때 DatePicker 정리
   useEffect(() => {

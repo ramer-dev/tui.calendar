@@ -185,6 +185,46 @@ export function EventFormPopup() {
   useEffect(() => {
     if (isPresent(popupParams) && isPresent(event)) {
       const eventObject = event.toEventObject();
+      
+      // recurrenceRule 확인: event.recurrenceRule 또는 event.raw에서 가져오기
+      let recurrenceRule = eventObject.recurrenceRule;
+      
+      // event.raw가 있고 recurrenceRule이 있으면 raw에서 가져오기 (더 정확할 수 있음)
+      if (event.raw && (event.raw as any).recurrenceRule) {
+        recurrenceRule = (event.raw as any).recurrenceRule;
+      }
+      
+      // event.isRepeat가 true이거나 recurrenceRule이 있으면 반복 이벤트로 간주
+      const isRepeat = event.isRepeat || !!recurrenceRule;
+      
+      // recurrenceRule이 있으면 상세 정보 로깅
+      if (recurrenceRule) {
+        console.log('[eventFormPopup] 수정 시 formState 초기화 - recurrenceRule 상세:', {
+          eventId: event.id,
+          isRepeat: event.isRepeat,
+          hasRecurrenceRule: !!recurrenceRule,
+          recurrenceRule: recurrenceRule,
+          repeat: recurrenceRule.repeat,
+          frequency: recurrenceRule.repeat?.frequency,
+          interval: (recurrenceRule.repeat as any)?.interval,
+          byDay: (recurrenceRule.repeat as any)?.byDay,
+          byMonthDay: (recurrenceRule.repeat as any)?.byMonthDay,
+          byMonth: (recurrenceRule.repeat as any)?.byMonth,
+          count: recurrenceRule.count,
+          until: recurrenceRule.until,
+          startDate: recurrenceRule.startDate,
+          eventRaw: event.raw
+        });
+      } else {
+        console.log('[eventFormPopup] 수정 시 formState 초기화:', {
+          eventId: event.id,
+          isRepeat: event.isRepeat,
+          hasRecurrenceRule: !!recurrenceRule,
+          recurrenceRule: recurrenceRule,
+          eventRaw: event.raw
+        });
+      }
+      
       formStateDispatch({
         type: FormStateActionType.init,
         event: {
@@ -194,10 +234,12 @@ export function EventFormPopup() {
           isPrivate: popupParams.isPrivate,
           calendarId: event.calendarId,
           state: popupParams.eventState,
-          isRepeat: !!eventObject.recurrenceRule,
-          recurrenceRule: eventObject.recurrenceRule,
+          isRepeat: isRepeat,
+          recurrenceRule: isRepeat ? recurrenceRule : undefined,
         },
       });
+      
+      console.log('[eventFormPopup] formState 초기화 완료 - isRepeat:', isRepeat, 'recurrenceRule:', isRepeat ? recurrenceRule : undefined);
     }
   }, [calendars, event, formStateDispatch, popupParams]);
 
@@ -224,6 +266,18 @@ export function EventFormPopup() {
 
     eventData.start = new TZDate(datePickerRef.current?.getStartDate());
     eventData.end = new TZDate(datePickerRef.current?.getEndDate());
+
+    // formState에서 recurrenceRule과 isRepeat 명시적으로 설정
+    eventData.isRepeat = formState.isRepeat;
+    eventData.recurrenceRule = formState.isRepeat ? formState.recurrenceRule : undefined;
+
+    console.log('[eventFormPopup] onSubmit - eventData:', {
+      isRepeat: eventData.isRepeat,
+      hasRecurrenceRule: !!eventData.recurrenceRule,
+      recurrenceRule: eventData.recurrenceRule,
+      formStateIsRepeat: formState.isRepeat,
+      formStateRecurrenceRule: formState.recurrenceRule
+    });
 
     if (isCreationPopup) {
       eventBus.fire('beforeCreateEvent', eventData);

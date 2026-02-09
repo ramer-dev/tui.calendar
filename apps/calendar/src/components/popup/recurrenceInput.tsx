@@ -87,6 +87,17 @@ export function RecurrenceInputBox({
   const [endType, setEndType] = useState<'count' | 'until' | 'forever'>(
     recurrence?.count ? 'count' : recurrence?.until ? 'until' : 'forever'
   );
+  
+  // endType 변경 핸들러 - 무한 루프 방지를 위한 로깅
+  const handleEndTypeChange = (type: 'count' | 'until' | 'forever') => {
+    console.log('[recurrenceInput] handleEndTypeChange 호출:', type, '현재 endType:', endType);
+    if (type !== endType) {
+      console.log('[recurrenceInput] endType 변경:', endType, '->', type);
+      setEndType(type);
+    } else {
+      console.log('[recurrenceInput] endType이 동일하므로 변경하지 않음');
+    }
+  };
   const [count, setCount] = useState<number>(recurrence?.count || 10);
   // until 초기값 설정 함수
   const getUntilInitialValue = (untilValue: string | Date | 'forever' | undefined): string => {
@@ -132,66 +143,149 @@ export function RecurrenceInputBox({
   // recurrence가 변경되면 상태 업데이트
   // 무한 루프 방지를 위해 이전 recurrence와 비교
   const prevRecurrenceRef = useRef<typeof recurrence>();
+  
   useEffect(() => {
+    console.log('[recurrenceInput] recurrence prop useEffect 실행');
+    console.log('[recurrenceInput] recurrence:', recurrence);
+    console.log('[recurrenceInput] isRepeat:', isRepeat);
+    console.log('[recurrenceInput] prevRecurrenceRef.current:', prevRecurrenceRef.current);
+    
     // recurrence가 실제로 변경되었는지 확인
-    const recurrenceChanged = JSON.stringify(prevRecurrenceRef.current) !== JSON.stringify(recurrence);
-    
-    if (!recurrenceChanged && prevRecurrenceRef.current !== undefined) {
-      // 변경되지 않았으면 업데이트하지 않음
-      return;
-    }
-    
-    prevRecurrenceRef.current = recurrence;
-    
-    if (recurrence) {
-      const repeat = recurrence.repeat;
-      setFrequency(repeat.frequency);
-      if ('interval' in repeat) {
-        setInterval(repeat.interval || 1);
-      }
-      if ('byDay' in repeat && repeat.byDay) {
-        if (repeat.frequency === 'weekly') {
-          setSelectedDays(repeat.byDay as DayOfWeek[]);
-        } else {
-          const parsed = parseDayWithPosition(repeat.byDay as DayOfWeekWithPosition[]);
-          setWeekPosition(parsed.position);
-          setWeekDay(parsed.day);
+    // Date 객체를 포함한 경우를 위해 정규화된 비교 수행
+    // recurrenceId는 비교에서 제외 (편집 시 변경될 수 있음)
+    const normalizeForComparison = (rec?: RecurrenceRule) => {
+      if (!rec) return undefined;
+      const normalized: any = {
+        ...rec,
+        // recurrenceId는 비교에서 제외
+        recurrenceId: undefined,
+      };
+      
+      // startDate 정규화
+      if (normalized.startDate) {
+        if (normalized.startDate instanceof Date) {
+          normalized.startDate = normalized.startDate.toISOString();
+        } else if (typeof normalized.startDate === 'string') {
+          // ISO 문자열이거나 yyyy-MM-dd 형식인 경우 정규화
+          const date = new Date(normalized.startDate);
+          if (!isNaN(date.getTime())) {
+            normalized.startDate = date.toISOString().split('T')[0] + 'T00:00:00.000Z';
+          }
         }
       }
-      if ('byMonthDay' in repeat && repeat.byMonthDay) {
-        setMonthDay(repeat.byMonthDay[0]);
+      
+      // until 정규화
+      if (normalized.until && normalized.until !== 'forever') {
+        if (normalized.until instanceof Date) {
+          normalized.until = normalized.until.toISOString();
+        } else if (typeof normalized.until === 'string') {
+          const date = new Date(normalized.until);
+          if (!isNaN(date.getTime())) {
+            normalized.until = date.toISOString().split('T')[0] + 'T00:00:00.000Z';
+          }
+        }
       }
-      if ('byMonth' in repeat && repeat.byMonth) {
-        setSelectedMonths(repeat.byMonth);
-      }
-      if (recurrence.count) {
-        setEndType('count');
-        setCount(recurrence.count);
-      } else if (recurrence.until) {
-        setEndType('until');
-        if (recurrence.until !== 'forever') {
-          setUntil(getUntilInitialValue(recurrence.until));
+      
+      return normalized;
+    };
+    
+    const prevNormalized = normalizeForComparison(prevRecurrenceRef.current);
+    const currentNormalized = normalizeForComparison(recurrence);
+    const prevStr = JSON.stringify(prevNormalized);
+    const currentStr = JSON.stringify(currentNormalized);
+    const recurrenceChanged = prevStr !== currentStr;
+    
+    console.log('[recurrenceInput] recurrenceChanged:', recurrenceChanged);
+    console.log('[recurrenceInput] prevNormalized:', prevNormalized);
+    console.log('[recurrenceInput] currentNormalized:', currentNormalized);
+    
+    // prevRecurrenceRef가 undefined이면 처음 전달되는 것이므로 항상 업데이트
+    // 또는 recurrence가 실제로 변경된 경우에만 업데이트
+    if (prevRecurrenceRef.current === undefined || recurrenceChanged) {
+      console.log('[recurrenceInput] recurrence prop에서 로컬 state 업데이트 시작');
+      prevRecurrenceRef.current = recurrence;
+      
+      if (recurrence) {
+        const repeat = recurrence.repeat;
+        console.log('[recurrenceInput] repeat 설정:', repeat);
+        
+        // frequency 설정
+        setFrequency(repeat.frequency);
+        
+        // interval 설정
+        if ('interval' in repeat) {
+          setInterval(repeat.interval || 1);
+        }
+        
+        // byDay 설정 (weekly 또는 monthly/yearly의 요일 위치)
+        if ('byDay' in repeat && repeat.byDay && repeat.byDay.length > 0) {
+          if (repeat.frequency === 'weekly') {
+            setSelectedDays(repeat.byDay as DayOfWeek[]);
+            console.log('[recurrenceInput] selectedDays 설정:', repeat.byDay);
+          } else {
+            const parsed = parseDayWithPosition(repeat.byDay as DayOfWeekWithPosition[]);
+            setWeekPosition(parsed.position);
+            setWeekDay(parsed.day);
+            console.log('[recurrenceInput] weekPosition, weekDay 설정:', parsed);
+          }
         } else {
-          setUntil('');
+          // byDay가 없으면 초기화
+          if (repeat.frequency === 'weekly') {
+            setSelectedDays([]);
+          } else {
+            setWeekPosition('');
+            setWeekDay(null);
+          }
+        }
+        
+        // byMonthDay 설정
+        if ('byMonthDay' in repeat && repeat.byMonthDay && repeat.byMonthDay.length > 0) {
+          setMonthDay(repeat.byMonthDay[0]);
+          console.log('[recurrenceInput] monthDay 설정:', repeat.byMonthDay[0]);
+        } else {
+          setMonthDay(null);
+        }
+        
+        // byMonth 설정 (yearly)
+        if ('byMonth' in repeat && repeat.byMonth && repeat.byMonth.length > 0) {
+          setSelectedMonths(repeat.byMonth);
+          console.log('[recurrenceInput] selectedMonths 설정:', repeat.byMonth);
+        } else {
+          setSelectedMonths([]);
+        }
+        
+        // 종료 조건 설정
+        if (recurrence.count !== undefined && recurrence.count !== null) {
+          setEndType('count');
+          setCount(recurrence.count);
+          console.log('[recurrenceInput] endType: count, count:', recurrence.count);
+        } else if (recurrence.until && recurrence.until !== 'forever') {
+          setEndType('until');
+          setUntil(getUntilInitialValue(recurrence.until));
+          console.log('[recurrenceInput] endType: until, until:', getUntilInitialValue(recurrence.until));
+        } else {
+          setEndType('forever');
+          console.log('[recurrenceInput] endType: forever');
         }
       } else {
-        setEndType('forever');
+        // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
+        // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
+        if (!isRepeat) {
+          console.log('[recurrenceInput] recurrence가 없고 isRepeat이 false이므로 기본값으로 초기화');
+          setFrequency('daily');
+          setInterval(1);
+          setSelectedDays([]);
+          setMonthDay(null);
+          setWeekPosition('');
+          setWeekDay(null);
+          setSelectedMonths([]);
+          setEndType('forever');
+          setCount(10);
+          setUntil('');
+        }
       }
     } else {
-      // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
-      // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
-      if (!isRepeat) {
-        setFrequency('daily');
-        setInterval(1);
-        setSelectedDays([]);
-        setMonthDay(null);
-        setWeekPosition('');
-        setWeekDay(null);
-        setSelectedMonths([]);
-        setEndType('forever');
-        setCount(10);
-        setUntil('');
-      }
+      console.log('[recurrenceInput] recurrence prop이 변경되지 않았으므로 스킵');
     }
   }, [recurrence, isRepeat]);
 
@@ -339,18 +433,71 @@ export function RecurrenceInputBox({
   ]);
 
   // recurrence rule 업데이트
+  // 무한 루프 방지를 위해 이전 recurrenceRule과 비교
+  const prevRecurrenceRuleRef = useRef<RecurrenceRule | undefined>();
+  const isUpdatingRef = useRef<boolean>(false);
+  
   useEffect(() => {
+    console.log('[recurrenceInput] createRecurrenceRule useEffect 실행');
+    console.log('[recurrenceInput] isRepeat:', isRepeat);
+    console.log('[recurrenceInput] createRecurrenceRule:', createRecurrenceRule);
+    console.log('[recurrenceInput] prevRecurrenceRuleRef.current:', prevRecurrenceRuleRef.current);
+    console.log('[recurrenceInput] isUpdatingRef.current:', isUpdatingRef.current);
+    
+    // 이미 업데이트 중이면 스킵 (무한 루프 방지)
+    if (isUpdatingRef.current) {
+      console.log('[recurrenceInput] 이미 업데이트 중이므로 스킵');
+      return;
+    }
+    
+    // createRecurrenceRule이 실제로 변경되었는지 확인
+    const normalizeForComparison = (rule?: RecurrenceRule) => {
+      if (!rule) return undefined;
+      return {
+        ...rule,
+        startDate: typeof rule.startDate === 'string' ? rule.startDate : 
+                   rule.startDate instanceof Date ? rule.startDate.toISOString() : 
+                   rule.startDate,
+        until: rule.until && rule.until !== 'forever' && rule.until instanceof Date ? 
+               rule.until.toISOString() : rule.until,
+      };
+    };
+    
+    const prevNormalized = normalizeForComparison(prevRecurrenceRuleRef.current);
+    const currentNormalized = normalizeForComparison(createRecurrenceRule);
+    const recurrenceRuleChanged = JSON.stringify(prevNormalized) !== JSON.stringify(currentNormalized);
+    
+    console.log('[recurrenceInput] recurrenceRuleChanged:', recurrenceRuleChanged);
+    
+    if (!recurrenceRuleChanged && prevRecurrenceRuleRef.current !== undefined) {
+      // 변경되지 않았으면 업데이트하지 않음
+      console.log('[recurrenceInput] recurrenceRule이 변경되지 않았으므로 스킵');
+      return;
+    }
+    
+    console.log('[recurrenceInput] recurrenceRule 업데이트 시작');
+    isUpdatingRef.current = true;
+    prevRecurrenceRuleRef.current = createRecurrenceRule;
+    
     if (isRepeat) {
+      console.log('[recurrenceInput] formStateDispatch 호출 - setRecurrenceRule:', createRecurrenceRule);
       formStateDispatch({
         type: FormStateActionType.setRecurrenceRule,
         recurrenceRule: createRecurrenceRule,
       });
     } else {
+      console.log('[recurrenceInput] formStateDispatch 호출 - setRecurrenceRule: undefined');
       formStateDispatch({
         type: FormStateActionType.setRecurrenceRule,
         recurrenceRule: undefined,
       });
     }
+    
+    // 다음 렌더링 사이클에서 isUpdatingRef를 리셋
+    setTimeout(() => {
+      isUpdatingRef.current = false;
+      console.log('[recurrenceInput] isUpdatingRef 리셋');
+    }, 0);
   }, [isRepeat, createRecurrenceRule, formStateDispatch]);
 
   const handleRecurrenceChange = () =>
@@ -446,7 +593,7 @@ export function RecurrenceInputBox({
             endType={endType}
             count={count}
             until={until}
-            onEndTypeChange={setEndType}
+            onEndTypeChange={handleEndTypeChange}
             onCountChange={setCount}
             onUntilChange={setUntil}
           />

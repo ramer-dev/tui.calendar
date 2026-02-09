@@ -117,44 +117,47 @@ export function RecurrenceOptionModal({
                 선택한 날짜의 일정만 {actionLabel}됩니다.
               </div>
             </button>
-            <button
-              type="button"
-              className={`${classNames.optionButton} ${selectedOption === 'thisAndFuture' ? 'selected' : ''}`}
-              onClick={() => handleOptionClick('thisAndFuture')}
-              style={selectedOption === 'thisAndFuture' ? { 
-                borderColor: actionColor,
-                borderWidth: '2px',
-                background: actionType === 'edit' ? 'rgba(6, 201, 250, 0.1)' : 'rgba(220, 53, 69, 0.1)',
-                boxShadow: `0 0 0 3px ${actionType === 'edit' ? 'rgba(6, 201, 250, 0.1)' : 'rgba(220, 53, 69, 0.1)'}`,
-                transform: 'translateY(-1px)'
-              } : {}}
-            >
-              {selectedOption === 'thisAndFuture' && (
-                <span style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  backgroundColor: actionColor,
-                  color: '#fff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  lineHeight: '20px'
-                }}>✓</span>
-              )}
-              <div className={classNames.optionTitle} style={selectedOption === 'thisAndFuture' ? { color: actionColor, fontWeight: '700', paddingLeft: '32px' } : {}}>
-                이 일정과 이후 모든 일정 {actionLabel}
-              </div>
-              <div className={classNames.optionDescription} style={selectedOption === 'thisAndFuture' ? { color: actionColor, paddingLeft: '32px' } : {}}>
-                선택한 날짜부터 모든 반복 일정이 {actionLabel}됩니다.
-              </div>
-            </button>
+            {/* 수정 시에는 thisAndFuture 옵션 제거 */}
+            {actionType === 'delete' && (
+              <button
+                type="button"
+                className={`${classNames.optionButton} ${selectedOption === 'thisAndFuture' ? 'selected' : ''}`}
+                onClick={() => handleOptionClick('thisAndFuture')}
+                style={selectedOption === 'thisAndFuture' ? { 
+                  borderColor: actionColor,
+                  borderWidth: '2px',
+                  background: 'rgba(220, 53, 69, 0.1)',
+                  boxShadow: `0 0 0 3px rgba(220, 53, 69, 0.1)`,
+                  transform: 'translateY(-1px)'
+                } : {}}
+              >
+                {selectedOption === 'thisAndFuture' && (
+                  <span style={{
+                    position: 'absolute',
+                    left: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: actionColor,
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    lineHeight: '20px'
+                  }}>✓</span>
+                )}
+                <div className={classNames.optionTitle} style={selectedOption === 'thisAndFuture' ? { color: actionColor, fontWeight: '700', paddingLeft: '32px' } : {}}>
+                  이 일정과 이후 모든 일정 {actionLabel}
+                </div>
+                <div className={classNames.optionDescription} style={selectedOption === 'thisAndFuture' ? { color: actionColor, paddingLeft: '32px' } : {}}>
+                  선택한 날짜부터 모든 반복 일정이 {actionLabel}됩니다.
+                </div>
+              </button>
+            )}
             <button
               type="button"
               className={`${classNames.optionButton} ${selectedOption === 'all' ? 'selected' : ''}`}
