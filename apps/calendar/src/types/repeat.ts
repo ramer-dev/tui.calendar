@@ -134,6 +134,11 @@ export interface YearlyRepeatOptions {
  */
 export interface RecurrenceRule extends RepeatEndCondition {
   /**
+   * 반복 규칙의 고유 ID
+   * 같은 반복 패턴을 가진 모든 인스턴스가 공유하는 ID
+   */
+  recurrenceId?: string
+  /**
    * 반복 옵션
    */
   repeat: DailyRepeatOptions | WeeklyRepeatOptions | MonthlyRepeatOptions | YearlyRepeatOptions

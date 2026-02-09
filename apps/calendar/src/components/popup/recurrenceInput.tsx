@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { useEffect, useState, useMemo } from 'preact/hooks';
+import { useEffect, useState, useMemo, useRef } from 'preact/hooks';
 
 import { PopupSection } from '@src/components/popup/popupSection';
 import { cls } from '@src/helpers/css';
@@ -18,6 +18,12 @@ import type {
 } from '@src/types/repeat';
 import { Template } from '../template';
 import TZDate from '@src/time/date';
+import { DailyRecurrenceOptions } from './recurrence/DailyRecurrenceOptions';
+import { WeeklyRecurrenceOptions } from './recurrence/WeeklyRecurrenceOptions';
+import { MonthlyRecurrenceOptions } from './recurrence/MonthlyRecurrenceOptions';
+import { YearlyRecurrenceOptions } from './recurrence/YearlyRecurrenceOptions';
+import { RecurrenceEndCondition } from './recurrence/RecurrenceEndCondition';
+import { FREQUENCY_OPTIONS } from './recurrence/constants';
 
 interface Props {
   recurrence?: RecurrenceRule;
@@ -27,57 +33,12 @@ interface Props {
 }
 
 const classNames = {
-  popupSectionItem: cls('popup-section-item', 'popup-section-location'),
-  locationIcon: cls('icon', 'ic-repeat-b'),
   content: cls('content'),
   repeat: cls('popup-section-item', 'popup-section-repeat'),
-  repeatOptions: cls('popup-section-item', 'popup-repeat-options'),
-  select: cls('popup-select'),
-  input: cls('popup-input'),
-  label: cls('popup-label'),
-  checkboxGroup: cls('popup-checkbox-group'),
-  checkboxItem: cls('popup-checkbox-item'),
+  repeatOptions: cls('recurrence-options'),
+  frequencySelect: cls('recurrence-select-wrapper'),
+  frequencySelectInput: cls('recurrence-select'),
 };
-
-const FREQUENCY_OPTIONS: { value: RepeatFrequency; label: string }[] = [
-  { value: 'daily', label: '일일' },
-  { value: 'weekly', label: '주간' },
-  { value: 'monthly', label: '월간' },
-  { value: 'yearly', label: '연간' },
-];
-
-const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
-  { value: 'MO', label: '월요일' },
-  { value: 'TU', label: '화요일' },
-  { value: 'WE', label: '수요일' },
-  { value: 'TH', label: '목요일' },
-  { value: 'FR', label: '금요일' },
-  { value: 'SA', label: '토요일' },
-  { value: 'SU', label: '일요일' },
-];
-
-const MONTH_OPTIONS = [
-  { value: 1, label: '1월' },
-  { value: 2, label: '2월' },
-  { value: 3, label: '3월' },
-  { value: 4, label: '4월' },
-  { value: 5, label: '5월' },
-  { value: 6, label: '6월' },
-  { value: 7, label: '7월' },
-  { value: 8, label: '8월' },
-  { value: 9, label: '9월' },
-  { value: 10, label: '10월' },
-  { value: 11, label: '11월' },
-  { value: 12, label: '12월' },
-];
-
-const WEEK_POSITION_OPTIONS = [
-  { value: '1', label: '첫째 주' },
-  { value: '2', label: '둘째 주' },
-  { value: '3', label: '셋째 주' },
-  { value: '4', label: '넷째 주' },
-  { value: '-1', label: '마지막 주' },
-];
 
 export function RecurrenceInputBox({
   recurrence,
@@ -127,14 +88,61 @@ export function RecurrenceInputBox({
     recurrence?.count ? 'count' : recurrence?.until ? 'until' : 'forever'
   );
   const [count, setCount] = useState<number>(recurrence?.count || 10);
+  // until 초기값 설정 함수
+  const getUntilInitialValue = (untilValue: string | Date | 'forever' | undefined): string => {
+    if (!untilValue || untilValue === 'forever') {
+      return '';
+    }
+    
+    try {
+      let date: Date;
+      if (untilValue instanceof Date) {
+        date = untilValue;
+      } else if (typeof untilValue === 'string') {
+        // ISO 문자열이거나 yyyy-MM-dd 형식
+        date = new Date(untilValue);
+        if (isNaN(date.getTime())) {
+          // yyyy-MM-dd 형식인 경우 시간 추가
+          date = new Date(untilValue + 'T00:00:00');
+        }
+      } else {
+        return '';
+      }
+      
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid until date:', untilValue);
+        return '';
+      }
+      
+      // yyyy-MM-dd 형식으로 변환
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Error parsing until date:', error, untilValue);
+      return '';
+    }
+  };
+
   const [until, setUntil] = useState<string>(
-    recurrence?.until && recurrence.until !== 'forever'
-      ? new TZDate(recurrence.until).toString().split('T')[0]
-      : ''
+    getUntilInitialValue(recurrence?.until)
   );
 
   // recurrence가 변경되면 상태 업데이트
+  // 무한 루프 방지를 위해 이전 recurrence와 비교
+  const prevRecurrenceRef = useRef<typeof recurrence>();
   useEffect(() => {
+    // recurrence가 실제로 변경되었는지 확인
+    const recurrenceChanged = JSON.stringify(prevRecurrenceRef.current) !== JSON.stringify(recurrence);
+    
+    if (!recurrenceChanged && prevRecurrenceRef.current !== undefined) {
+      // 변경되지 않았으면 업데이트하지 않음
+      return;
+    }
+    
+    prevRecurrenceRef.current = recurrence;
+    
     if (recurrence) {
       const repeat = recurrence.repeat;
       setFrequency(repeat.frequency);
@@ -162,13 +170,30 @@ export function RecurrenceInputBox({
       } else if (recurrence.until) {
         setEndType('until');
         if (recurrence.until !== 'forever') {
-          setUntil(new TZDate(recurrence.until).toString().split('T')[0]);
+          setUntil(getUntilInitialValue(recurrence.until));
+        } else {
+          setUntil('');
         }
       } else {
         setEndType('forever');
       }
+    } else {
+      // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
+      // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
+      if (!isRepeat) {
+        setFrequency('daily');
+        setInterval(1);
+        setSelectedDays([]);
+        setMonthDay(null);
+        setWeekPosition('');
+        setWeekDay(null);
+        setSelectedMonths([]);
+        setEndType('forever');
+        setCount(10);
+        setUntil('');
+      }
     }
-  }, [recurrence]);
+  }, [recurrence, isRepeat]);
 
   // frequency가 변경되면 관련 상태 초기화
   useEffect(() => {
@@ -250,15 +275,51 @@ export function RecurrenceInputBox({
         break;
     }
 
+    // startDate를 ISO 문자열로 변환 (전체 날짜/시간 정보 유지)
+    let ruleStartDate: string | Date;
+    if (!startDate) {
+      ruleStartDate = new TZDate().toDate().toISOString();
+    } else if (typeof startDate === 'string') {
+      ruleStartDate = startDate;
+    } else if (startDate instanceof TZDate) {
+      ruleStartDate = startDate.toDate().toISOString();
+    } else if (startDate instanceof Date) {
+      ruleStartDate = startDate.toISOString();
+    } else {
+      ruleStartDate = new TZDate(startDate).toDate().toISOString();
+    }
+
     const rule: RecurrenceRule = {
       repeat,
-      startDate: typeof startDate === 'string' ? startDate : new TZDate(startDate).toString().split('T')[0],
+      startDate: ruleStartDate,
     };
 
     if (endType === 'count') {
       rule.count = count;
     } else if (endType === 'until') {
-      rule.until = until ? new Date(until) : 'forever';
+      if (until) {
+        // until이 yyyy-MM-dd 형식의 문자열인 경우 Date로 변환
+        // 시간대 문제를 피하기 위해 명시적으로 시간 추가
+        let parsedDate: Date;
+        if (until.includes('T') || until.includes(' ')) {
+          // 이미 시간 정보가 포함된 경우
+          parsedDate = new Date(until);
+        } else {
+          // yyyy-MM-dd 형식인 경우 로컬 시간으로 해석
+          // 시간을 00:00:00으로 설정하여 날짜만 사용
+          parsedDate = new Date(until + 'T00:00:00');
+        }
+        
+        if (isNaN(parsedDate.getTime())) {
+          console.error('Invalid until date:', until);
+          rule.until = 'forever';
+        } else {
+          console.log('until 날짜 변환 성공:', until, '->', parsedDate);
+          rule.until = parsedDate;
+        }
+      } else {
+        rule.until = 'forever';
+      }
     }
 
     return rule;
@@ -295,16 +356,6 @@ export function RecurrenceInputBox({
   const handleRecurrenceChange = () =>
     formStateDispatch({ type: FormStateActionType.setRepeat, isRepeat: !isRepeat });
 
-  const toggleDay = (day: DayOfWeek) => {
-    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
-  };
-
-  const toggleMonth = (month: number) => {
-    setSelectedMonths((prev) =>
-      prev.includes(month) ? prev.filter((m) => m !== month) : [...prev, month]
-    );
-  };
-
   return (
     <>
       <PopupSection>
@@ -331,252 +382,74 @@ export function RecurrenceInputBox({
       {isRepeat && (
         <div className={classNames.repeatOptions}>
           {/* Frequency 선택 */}
-          <div className={classNames.popupSectionItem}>
-            <label className={classNames.label}>반복 빈도</label>
-            <select
-              className={classNames.select}
-              value={frequency}
-              onChange={(e) => setFrequency(e.currentTarget.value as RepeatFrequency)}
-            >
-              {FREQUENCY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Interval 입력 */}
-          <div className={classNames.popupSectionItem}>
-            <label className={classNames.label}>
-              반복 간격 ({frequency === 'daily' ? '일' : frequency === 'weekly' ? '주' : frequency === 'monthly' ? '개월' : '년'})
-            </label>
-            <input
-              type="number"
-              className={classNames.input}
-              min="1"
-              value={interval}
-              onChange={(e) => setInterval(parseInt(e.currentTarget.value) || 1)}
-            />
-          </div>
-
-          {/* 주간: 요일 선택 */}
-          {frequency === 'weekly' && (
-            <div className={classNames.popupSectionItem}>
-              <label className={classNames.label}>반복 요일</label>
-              <div className={classNames.checkboxGroup}>
-                {DAY_OPTIONS.map((day) => (
-                  <label key={day.value} className={classNames.checkboxItem}>
-                    <input
-                      type="checkbox"
-                      checked={selectedDays.includes(day.value)}
-                      onChange={() => toggleDay(day.value)}
-                    />
-                    <span>{day.label}</span>
-                  </label>
+          <div className={cls('recurrence-option-item')}>
+            <label className={cls('recurrence-label')}>반복 빈도</label>
+            <div className={classNames.frequencySelect}>
+              <select
+                className={classNames.frequencySelectInput}
+                value={frequency}
+                onChange={(e) => setFrequency(e.currentTarget.value as RepeatFrequency)}
+              >
+                {FREQUENCY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
-              </div>
+              </select>
             </div>
+          </div>
+
+          {/* 빈도별 옵션 컴포넌트 */}
+          {frequency === 'daily' && (
+            <DailyRecurrenceOptions interval={interval} onIntervalChange={setInterval} />
           )}
 
-          {/* 월간: 날짜 또는 요일 선택 */}
+          {frequency === 'weekly' && (
+            <WeeklyRecurrenceOptions
+              interval={interval}
+              selectedDays={selectedDays}
+              onIntervalChange={setInterval}
+              onDaysChange={setSelectedDays}
+            />
+          )}
+
           {frequency === 'monthly' && (
-            <>
-              <div className={classNames.popupSectionItem}>
-                <label className={classNames.label}>반복 방식</label>
-                <select
-                  className={classNames.select}
-                  value={weekPosition && weekDay ? 'day' : 'date'}
-                  onChange={(e) => {
-                    if (e.currentTarget.value === 'date') {
-                      setWeekPosition('');
-                      setWeekDay(null);
-                    } else {
-                      setMonthDay(null);
-                    }
-                  }}
-                >
-                  <option value="date">날짜로</option>
-                  <option value="day">요일로</option>
-                </select>
-              </div>
-
-              {weekPosition && weekDay ? (
-                <>
-                  <div className={classNames.popupSectionItem}>
-                    <label className={classNames.label}>주</label>
-                    <select
-                      className={classNames.select}
-                      value={weekPosition}
-                      onChange={(e) => setWeekPosition(e.currentTarget.value)}
-                    >
-                      {WEEK_POSITION_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={classNames.popupSectionItem}>
-                    <label className={classNames.label}>요일</label>
-                    <select
-                      className={classNames.select}
-                      value={weekDay}
-                      onChange={(e) => setWeekDay(e.currentTarget.value as DayOfWeek)}
-                    >
-                      {DAY_OPTIONS.map((day) => (
-                        <option key={day.value} value={day.value}>
-                          {day.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              ) : (
-                <div className={classNames.popupSectionItem}>
-                  <label className={classNames.label}>날짜</label>
-                  <input
-                    type="number"
-                    className={classNames.input}
-                    min="-31"
-                    max="31"
-                    value={monthDay || ''}
-                    onChange={(e) => setMonthDay(parseInt(e.currentTarget.value) || null)}
-                    placeholder="예: 15 (15일), -1 (마지막 날)"
-                  />
-                </div>
-              )}
-            </>
+            <MonthlyRecurrenceOptions
+              interval={interval}
+              monthDay={monthDay}
+              weekPosition={weekPosition}
+              weekDay={weekDay}
+              onIntervalChange={setInterval}
+              onMonthDayChange={setMonthDay}
+              onWeekPositionChange={setWeekPosition}
+              onWeekDayChange={setWeekDay}
+            />
           )}
 
-          {/* 연간: 월, 날짜/요일 선택 */}
           {frequency === 'yearly' && (
-            <>
-              <div className={classNames.popupSectionItem}>
-                <label className={classNames.label}>반복 월</label>
-                <div className={classNames.checkboxGroup}>
-                  {MONTH_OPTIONS.map((month) => (
-                    <label key={month.value} className={classNames.checkboxItem}>
-                      <input
-                        type="checkbox"
-                        checked={selectedMonths.includes(month.value)}
-                        onChange={() => toggleMonth(month.value)}
-                      />
-                      <span>{month.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className={classNames.popupSectionItem}>
-                <label className={classNames.label}>반복 방식</label>
-                <select
-                  className={classNames.select}
-                  value={weekPosition && weekDay ? 'day' : monthDay !== null ? 'date' : 'none'}
-                  onChange={(e) => {
-                    if (e.currentTarget.value === 'date') {
-                      setWeekPosition('');
-                      setWeekDay(null);
-                    } else if (e.currentTarget.value === 'day') {
-                      setMonthDay(null);
-                    } else {
-                      setWeekPosition('');
-                      setWeekDay(null);
-                      setMonthDay(null);
-                    }
-                  }}
-                >
-                  <option value="none">없음</option>
-                  <option value="date">날짜로</option>
-                  <option value="day">요일로</option>
-                </select>
-              </div>
-
-              {weekPosition && weekDay ? (
-                <>
-                  <div className={classNames.popupSectionItem}>
-                    <label className={classNames.label}>주</label>
-                    <select
-                      className={classNames.select}
-                      value={weekPosition}
-                      onChange={(e) => setWeekPosition(e.currentTarget.value)}
-                    >
-                      {WEEK_POSITION_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={classNames.popupSectionItem}>
-                    <label className={classNames.label}>요일</label>
-                    <select
-                      className={classNames.select}
-                      value={weekDay}
-                      onChange={(e) => setWeekDay(e.currentTarget.value as DayOfWeek)}
-                    >
-                      {DAY_OPTIONS.map((day) => (
-                        <option key={day.value} value={day.value}>
-                          {day.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </>
-              ) : monthDay !== null ? (
-                <div className={classNames.popupSectionItem}>
-                  <label className={classNames.label}>날짜</label>
-                  <input
-                    type="number"
-                    className={classNames.input}
-                    min="1"
-                    max="31"
-                    value={monthDay}
-                    onChange={(e) => setMonthDay(parseInt(e.currentTarget.value) || null)}
-                  />
-                </div>
-              ) : null}
-            </>
+            <YearlyRecurrenceOptions
+              interval={interval}
+              selectedMonths={selectedMonths}
+              monthDay={monthDay}
+              weekPosition={weekPosition}
+              weekDay={weekDay}
+              onIntervalChange={setInterval}
+              onMonthsChange={setSelectedMonths}
+              onMonthDayChange={setMonthDay}
+              onWeekPositionChange={setWeekPosition}
+              onWeekDayChange={setWeekDay}
+            />
           )}
 
           {/* 종료 조건 */}
-          <div className={classNames.popupSectionItem}>
-            <label className={classNames.label}>종료 조건</label>
-            <select
-              className={classNames.select}
-              value={endType}
-              onChange={(e) => setEndType(e.currentTarget.value as 'count' | 'until' | 'forever')}
-            >
-              <option value="forever">무한 반복</option>
-              <option value="count">횟수로</option>
-              <option value="until">날짜로</option>
-            </select>
-          </div>
-
-          {endType === 'count' && (
-            <div className={classNames.popupSectionItem}>
-              <label className={classNames.label}>반복 횟수</label>
-              <input
-                type="number"
-                className={classNames.input}
-                min="1"
-                value={count}
-                onChange={(e) => setCount(parseInt(e.currentTarget.value) || 1)}
-              />
-            </div>
-          )}
-
-          {endType === 'until' && (
-            <div className={classNames.popupSectionItem}>
-              <label className={classNames.label}>종료 날짜</label>
-              <input
-                type="date"
-                className={classNames.input}
-                value={until}
-                onChange={(e) => setUntil(e.currentTarget.value)}
-              />
-            </div>
-          )}
+          <RecurrenceEndCondition
+            endType={endType}
+            count={count}
+            until={until}
+            onEndTypeChange={setEndType}
+            onCountChange={setCount}
+            onUntilChange={setUntil}
+          />
         </div>
       )}
     </>

@@ -275,7 +275,44 @@ export function createTemplates(i18nStrings?: I18nStrings): Template {
         },
 
         popupDetailRecurrenceRule({ recurrenceRule }: EventObjectWithDefaultValues) {
-            return recurrenceRule;
+            if (!recurrenceRule || !recurrenceRule.repeat) {
+                return '';
+            }
+
+            const { repeat } = recurrenceRule;
+            const frequencyLabels: Record<string, string> = {
+                daily: t.recurrenceDaily || '일일',
+                weekly: t.recurrenceWeekly || '주간',
+                monthly: t.recurrenceMonthly || '월간',
+                yearly: t.recurrenceYearly || '연간',
+            };
+
+            const frequencyLabel = frequencyLabels[repeat.frequency] || repeat.frequency;
+            const interval = repeat.interval || 1;
+            let description = `${interval}${frequencyLabel === '일일' ? '일' : frequencyLabel === '주간' ? '주' : frequencyLabel === '월간' ? '개월' : '년'}마다`;
+
+            if (repeat.frequency === 'weekly' && repeat.byDay && repeat.byDay.length > 0) {
+                const dayLabels: Record<string, string> = {
+                    MO: '월',
+                    TU: '화',
+                    WE: '수',
+                    TH: '목',
+                    FR: '금',
+                    SA: '토',
+                    SU: '일',
+                };
+                const days = repeat.byDay.map((day) => dayLabels[day] || day).join(', ');
+                description += ` (${days}요일)`;
+            }
+
+            if (recurrenceRule.count) {
+                description += `, ${recurrenceRule.count}회`;
+            } else if (recurrenceRule.until && recurrenceRule.until !== 'forever') {
+                const untilDate = new Date(recurrenceRule.until);
+                description += `, ${untilDate.toLocaleDateString()}까지`;
+            }
+
+            return description;
         },
 
         popupDetailBody({ body }: EventObjectWithDefaultValues) {

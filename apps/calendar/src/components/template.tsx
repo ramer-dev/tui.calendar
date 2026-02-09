@@ -25,14 +25,24 @@ export function Template({ template, param, as: tagName = 'div' }: Props) {
 
   const htmlOrVnode: TemplateReturnType = templateFunc(param);
 
-  return isString(htmlOrVnode)
-    ? createElement(tagName, {
-        className: cls(`template-${template}`),
-        dangerouslySetInnerHTML: {
-          __html: sanitize(htmlOrVnode),
-        },
-      })
-    : cloneElement(htmlOrVnode, {
-        className: `${htmlOrVnode.props.className ?? ''} ${cls(`template-${template}`)}`,
-      });
+  if (isString(htmlOrVnode)) {
+    return createElement(tagName, {
+      className: cls(`template-${template}`),
+      dangerouslySetInnerHTML: {
+        __html: sanitize(htmlOrVnode),
+      },
+    });
+  }
+
+  // VNode가 아닌 경우 (객체 등) 문자열로 변환
+  if (!htmlOrVnode || typeof htmlOrVnode !== 'object' || !('props' in htmlOrVnode)) {
+    return createElement(tagName, {
+      className: cls(`template-${template}`),
+    }, String(htmlOrVnode ?? ''));
+  }
+
+  // VNode인 경우
+  return cloneElement(htmlOrVnode, {
+    className: `${htmlOrVnode.props?.className ?? ''} ${cls(`template-${template}`)}`,
+  });
 }

@@ -1,0 +1,213 @@
+/* Recurrence Options Container */
+.recurrence-options {
+  padding: 12px 0;
+  border-top: 1px solid #e5e5e5;
+  margin-top: 8px;
+}
+
+/* Recurrence Date Picker Wrapper */
+.recurrence-date-picker-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recurrence-date-picker-wrapper .datepicker-container {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  margin-top: 4px;
+}
+
+/* Recurrence Option Item */
+.recurrence-option-item {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recurrence-option-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Recurrence Label */
+.recurrence-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Input Wrapper */
+.recurrence-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d5d5d5;
+  border-radius: 4px;
+  padding: 0 12px;
+  height: 36px;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.recurrence-input-wrapper:focus-within {
+  border-color: #ff6618;
+  outline: none;
+}
+
+.recurrence-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #333;
+  background: transparent;
+  height: 100%;
+}
+
+.recurrence-input::placeholder {
+  color: #999;
+}
+
+.recurrence-unit {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+/* Select Wrapper */
+.recurrence-select-wrapper {
+  position: relative;
+}
+
+.recurrence-select {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d5d5d5;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  background-color: #fff;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 36px;
+  transition: border-color 0.2s ease;
+}
+
+.recurrence-select:hover {
+  border-color: #b5b5b5;
+}
+
+.recurrence-select:focus {
+  border-color: #ff6618;
+}
+
+/* Checkbox Group */
+.recurrence-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.recurrence-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.recurrence-checkbox-item:hover {
+  background-color: #f0f0f0;
+}
+
+.recurrence-checkbox-input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #ff6618;
+  margin: 0;
+}
+
+.recurrence-checkbox-label {
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.recurrence-checkbox-input:checked + .recurrence-checkbox-label {
+  font-weight: 500;
+  color: #ff6618;
+}
+
+/* Date Input */
+.recurrence-input-wrapper input[type='date'] {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: #333;
+  background: transparent;
+  height: 100%;
+  cursor: pointer;
+}
+
+.recurrence-input-wrapper input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.recurrence-input-wrapper input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .recurrence-checkbox-group {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .recurrence-checkbox-item {
+    padding: 4px 6px;
+    font-size: 12px;
+  }
+
+  .recurrence-checkbox-label {
+    font-size: 12px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 800px) {
+  .recurrence-checkbox-group {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}
+
+@media (min-width: 801px) {
+  .recurrence-checkbox-group {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}

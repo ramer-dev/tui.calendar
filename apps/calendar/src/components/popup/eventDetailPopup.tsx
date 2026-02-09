@@ -4,6 +4,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 
 import { EventDetailSectionDetail } from '@src/components/popup/eventDetailSectionDetail';
 import { EventDetailSectionHeader } from '@src/components/popup/eventDetailSectionHeader';
+import { RecurrenceOptionModal, type RecurrenceActionOption } from '@src/components/popup/RecurrenceOptionModal';
 import { Template } from '@src/components/template';
 import { DetailPopupArrowDirection, HALF_OF_POPUP_ARROW_HEIGHT } from '@src/constants/popup';
 import { useDispatch, useStore } from '@src/contexts/calendarStore';
@@ -84,6 +85,8 @@ export function EventDetailPopup() {
   const [arrowDirection, setArrowDirection] = useState<DetailPopupArrowDirection>(
     DetailPopupArrowDirection.left
   );
+  const [showEditOptionModal, setShowEditOptionModal] = useState(false);
+  const [showDeleteOptionModal, setShowDeleteOptionModal] = useState(false);
 
   const popupArrowClassName = useMemo(() => {
     const right = arrowDirection === DetailPopupArrowDirection.right;
@@ -130,7 +133,46 @@ export function EventDetailPopup() {
     left: eventRect.left + eventRect.width / 2,
   };
 
+  const isRecurring = !!event?.recurrenceRule;
+
   const onClickEditButton = () => {
+    if (isRecurring) {
+      setShowEditOptionModal(true);
+    } else {
+      if (useFormPopup) {
+        showFormPopup({
+          isCreationPopup: false,
+          event,
+          title,
+          location,
+          start,
+          end,
+          isAllday,
+          isPrivate,
+          eventState: state,
+          popupArrowPointPosition,
+        });
+      } else {
+        eventBus.fire('beforeUpdateEvent', { event: event.toEventObject(), changes: {} });
+      }
+    }
+  };
+
+  const onClickDeleteButton = () => {
+    if (isRecurring) {
+      setShowDeleteOptionModal(true);
+    } else {
+      eventBus.fire('beforeDeleteEvent', event.toEventObject());
+      hideDetailPopup();
+    }
+  };
+
+  const handleEditOptionConfirm = (option: RecurrenceActionOption) => {
+    setShowEditOptionModal(false);
+    // 옵션 정보를 이벤트 객체에 추가하여 전달
+    const eventObject = event.toEventObject();
+    (eventObject as any).recurrenceActionOption = option;
+    
     if (useFormPopup) {
       showFormPopup({
         isCreationPopup: false,
@@ -143,14 +185,18 @@ export function EventDetailPopup() {
         isPrivate,
         eventState: state,
         popupArrowPointPosition,
+        recurrenceActionOption: option,
       });
     } else {
-      eventBus.fire('beforeUpdateEvent', { event: event.toEventObject(), changes: {} });
+      eventBus.fire('beforeUpdateEvent', { event: eventObject, changes: {} });
     }
   };
 
-  const onClickDeleteButton = () => {
-    eventBus.fire('beforeDeleteEvent', event.toEventObject());
+  const handleDeleteOptionConfirm = (option: RecurrenceActionOption) => {
+    setShowDeleteOptionModal(false);
+    const eventObject = event.toEventObject();
+    (eventObject as any).recurrenceActionOption = option;
+    eventBus.fire('beforeDeleteEvent', eventObject);
     hideDetailPopup();
   };
 
@@ -186,6 +232,20 @@ export function EventDetailPopup() {
           <div className={classNames.fill} />
         </div>
       </div>
+      <RecurrenceOptionModal
+        isOpen={showEditOptionModal}
+        isRecurring={isRecurring}
+        actionType="edit"
+        onConfirm={handleEditOptionConfirm}
+        onCancel={() => setShowEditOptionModal(false)}
+      />
+      <RecurrenceOptionModal
+        isOpen={showDeleteOptionModal}
+        isRecurring={isRecurring}
+        actionType="delete"
+        onConfirm={handleDeleteOptionConfirm}
+        onCancel={() => setShowDeleteOptionModal(false)}
+      />
     </div>,
     detailPopupSlot
   );

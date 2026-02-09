@@ -45,6 +45,7 @@ export interface EventFormPopupParam extends BasePopupParam {
   isAllday: boolean;
   isPrivate: boolean;
   eventState?: EventState;
+  recurrenceActionOption?: 'this' | 'thisAndFuture' | 'all';
 }
 
 export interface EventDetailPopupParam extends BasePopupParam {

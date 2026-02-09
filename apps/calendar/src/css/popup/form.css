@@ -1,10 +1,53 @@
 .form-container {
   min-width: 474px;
+  max-height: 80vh;
   box-shadow: 0 2px 6px 0 rgb(0 0 0 / 10%);
   background-color: #fff;
   border: 1px solid #d5d5d5;
-  padding: 17px;
   border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.form-container-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 17px;
+  padding-bottom: 0;
+}
+
+/* 스크롤바 스타일링 */
+.form-container-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-container-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.form-container-scrollable::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.form-container-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.form-container-footer {
+  padding: 12px 17px 17px;
+  border-top: 1px solid #e5e5e5;
+  background-color: #fff;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.form-container-footer .popup-section {
+  margin: 0;
 }
 
 .form-container .hidden-input {

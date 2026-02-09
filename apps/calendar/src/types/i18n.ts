@@ -29,6 +29,12 @@ export interface I18nStrings {
     popupEdit: string;
     popupDelete: string;
 
+    // recurrence
+    recurrenceDaily: string;
+    recurrenceWeekly: string;
+    recurrenceMonthly: string;
+    recurrenceYearly: string;
+
     // Placeholders
     titlePlaceholder: string;
     locationPlaceholder: string;
