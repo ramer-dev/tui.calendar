@@ -1,6 +1,6 @@
 .form-container {
   min-width: 474px;
-  max-height: 80vh;
+  max-height: 70vh; /* recurrence 활성화 시 화면을 넘어가지 않도록 더 엄격한 제한 */
   box-shadow: 0 2px 6px 0 rgb(0 0 0 / 10%);
   background-color: #fff;
   border: 1px solid #d5d5d5;

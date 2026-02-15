@@ -17,9 +17,28 @@
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: 1000;
+  z-index: 10000; /* 팝업(z-index: 2)보다 훨씬 높게 설정하여 오버레이로 표시 */
   margin-top: 4px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
 }
+
+.tui-calendar-container {
+  position: absolute;
+}
+
+/* tui-date-picker 캘린더가 오버레이로 표시되도록 z-index 설정 */
+.recurrence-date-picker-wrapper .datepicker-container .tui-calendar {
+  z-index: 10001;
+  position: relative;
+}
+
+/* tui-date-picker가 body에 직접 렌더링되는 경우를 대비한 전역 스타일 */
+/* .popup-container ~ .tui-calendar,
+.popup-container .tui-calendar {
+  z-index: 10001 !important;
+} */
 
 /* Recurrence Option Item */
 .recurrence-option-item {

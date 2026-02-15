@@ -179,7 +179,7 @@ export function EventFormPopup() {
       setArrowLeft(arrowLeftPosition);
       setArrowDirection(direction);
     }
-  }, [layoutContainer, popupArrowPointPosition]);
+  }, [layoutContainer, popupArrowPointPosition, formState.isRepeat]); // formState.isRepeat 추가: recurrence 활성화 시 위치 재계산
 
   // Sync store's popupParams with formState when editing event
   useEffect(() => {

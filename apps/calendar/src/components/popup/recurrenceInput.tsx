@@ -88,11 +88,15 @@ export function RecurrenceInputBox({
     recurrence?.count ? 'count' : recurrence?.until ? 'until' : 'forever'
   );
   
+  // 사용자가 endType을 직접 변경했는지 추적하는 ref
+  const userChangedEndTypeRef = useRef<boolean>(false);
+  
   // endType 변경 핸들러 - 무한 루프 방지를 위한 로깅
   const handleEndTypeChange = (type: 'count' | 'until' | 'forever') => {
     console.log('[recurrenceInput] handleEndTypeChange 호출:', type, '현재 endType:', endType);
     if (type !== endType) {
       console.log('[recurrenceInput] endType 변경:', endType, '->', type);
+      userChangedEndTypeRef.current = true; // 사용자가 직접 변경했음을 표시
       setEndType(type);
     } else {
       console.log('[recurrenceInput] endType이 동일하므로 변경하지 않음');
@@ -203,6 +207,10 @@ export function RecurrenceInputBox({
     // 또는 recurrence가 실제로 변경된 경우에만 업데이트
     if (prevRecurrenceRef.current === undefined || recurrenceChanged) {
       console.log('[recurrenceInput] recurrence prop에서 로컬 state 업데이트 시작');
+      // recurrence prop이 처음 전달되거나 완전히 다른 recurrence로 변경된 경우에만 userChangedEndTypeRef 리셋
+      if (prevRecurrenceRef.current === undefined) {
+        userChangedEndTypeRef.current = false;
+      }
       prevRecurrenceRef.current = recurrence;
       
       if (recurrence) {
@@ -255,35 +263,53 @@ export function RecurrenceInputBox({
         }
         
         // 종료 조건 설정
-        if (recurrence.count !== undefined && recurrence.count !== null) {
-          setEndType('count');
-          setCount(recurrence.count);
-          console.log('[recurrenceInput] endType: count, count:', recurrence.count);
-        } else if (recurrence.until && recurrence.until !== 'forever') {
-          setEndType('until');
-          setUntil(getUntilInitialValue(recurrence.until));
-          console.log('[recurrenceInput] endType: until, until:', getUntilInitialValue(recurrence.until));
+        // 사용자가 직접 변경한 경우에는 prop에서 오는 값으로 덮어쓰지 않음
+        if (!userChangedEndTypeRef.current) {
+          if (recurrence.count !== undefined && recurrence.count !== null) {
+            setEndType('count');
+            setCount(recurrence.count);
+            console.log('[recurrenceInput] endType: count, count:', recurrence.count);
+          } else if (recurrence.until && recurrence.until !== 'forever') {
+            setEndType('until');
+            setUntil(getUntilInitialValue(recurrence.until));
+            console.log('[recurrenceInput] endType: until, until:', getUntilInitialValue(recurrence.until));
+          } else {
+            setEndType('forever');
+            console.log('[recurrenceInput] endType: forever');
+          }
         } else {
-          setEndType('forever');
-          console.log('[recurrenceInput] endType: forever');
+          console.log('[recurrenceInput] 사용자가 endType을 변경했으므로 prop 값으로 덮어쓰지 않음');
+          // count나 until 값은 업데이트 (endType은 유지)
+          if (recurrence.count !== undefined && recurrence.count !== null) {
+            setCount(recurrence.count);
+          }
+          if (recurrence.until && recurrence.until !== 'forever') {
+            setUntil(getUntilInitialValue(recurrence.until));
+          }
         }
-      } else {
-        // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
-        // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
-        if (!isRepeat) {
-          console.log('[recurrenceInput] recurrence가 없고 isRepeat이 false이므로 기본값으로 초기화');
-          setFrequency('daily');
-          setInterval(1);
-          setSelectedDays([]);
-          setMonthDay(null);
-          setWeekPosition('');
-          setWeekDay(null);
-          setSelectedMonths([]);
+    } else {
+      // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
+      // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
+      if (!isRepeat) {
+        console.log('[recurrenceInput] recurrence가 없고 isRepeat이 false이므로 기본값으로 초기화');
+        setFrequency('daily');
+        setInterval(1);
+        setSelectedDays([]);
+        setMonthDay(null);
+        setWeekPosition('');
+        setWeekDay(null);
+        setSelectedMonths([]);
+        if (!userChangedEndTypeRef.current) {
           setEndType('forever');
-          setCount(10);
-          setUntil('');
         }
+        setCount(10);
+        setUntil('');
+        userChangedEndTypeRef.current = false; // 초기화 시 플래그도 리셋
       }
+    }
+    
+    // recurrence prop이 변경될 때마다 userChangedEndTypeRef를 리셋하지 않음
+    // 사용자가 변경한 경우에만 유지
     } else {
       console.log('[recurrenceInput] recurrence prop이 변경되지 않았으므로 스킵');
     }
