@@ -1,0 +1,168 @@
+/* Recurrence Option Modal Overlay */
+.recurrence-option-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* Recurrence Option Modal */
+.recurrence-option-modal {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 450px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.recurrence-option-title {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.recurrence-option-message {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Options Container */
+.recurrence-option-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.recurrence-option-button {
+  padding: 16px;
+  border: 2px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.recurrence-option-button:hover:not(.selected) {
+  border-color: #ff6618;
+  background: #fff5f0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 102, 24, 0.15);
+}
+
+.recurrence-option-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(255, 102, 24, 0.2);
+}
+
+.recurrence-option-button.selected {
+  border-color: #ff6618;
+  background: #fff5f0;
+  box-shadow: 0 0 0 3px rgba(255, 102, 24, 0.1);
+  transform: translateY(-1px);
+}
+
+.recurrence-option-button.selected::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recurrence-option-button.selected::after {
+  content: '✓';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  z-index: 1;
+  line-height: 20px;
+  text-align: center;
+  width: 20px;
+}
+
+.recurrence-option-button-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #333;
+  padding-left: 32px;
+}
+
+.recurrence-option-button.selected .recurrence-option-button-title {
+  color: #ff6618;
+  font-weight: 700;
+}
+
+.recurrence-option-button-description {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
+  padding-left: 32px;
+}
+
+.recurrence-option-button.selected .recurrence-option-button-description {
+  color: #ff6618;
+}
+
+/* Button Group */
+.recurrence-option-button-group {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.recurrence-option-button-action {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.recurrence-option-button-primary {
+  color: #fff;
+}
+
+.recurrence-option-button-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.recurrence-option-button-secondary {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.recurrence-option-button-secondary:hover {
+  background: #e5e5e5;
+}

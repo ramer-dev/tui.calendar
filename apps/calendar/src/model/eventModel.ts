@@ -2,6 +2,7 @@ import { collidesWith } from '@src/helpers/events';
 import EventUIModel from '@src/model/eventUIModel';
 import TZDate from '@src/time/date';
 import { compare, MS_PER_DAY, parse, toEndOfDay, toStartOfDay } from '@src/time/datetime';
+import { RecurrenceRule } from '@src/types/repeat';
 import { stamp } from '@src/utils/stamp';
 import { isString } from '@src/utils/type';
 
@@ -40,7 +41,9 @@ export default class EventModel implements Omit<EventObjectWithDefaultValues, '_
 
   dueDateClass = '';
 
-  recurrenceRule = '';
+  recurrenceRule: RecurrenceRule = { repeat: { frequency: 'daily', interval: 1 }, startDate: new Date() };
+
+  isRepeat = false;
 
   state: EventState = 'Busy';
 

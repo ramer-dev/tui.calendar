@@ -1,8 +1,8 @@
-@import './common.css';
-@import './layout.css';
-@import './icons.css';
-@import './timegrid/index.css';
-@import './events/index.css';
 @import './panel/index.css';
-@import './popup/index.css';
+@import './events/index.css';
+@import './timegrid/index.css';
+@import './icons.css';
+@import './layout.css';
+@import './common.css';
 @import './daygrid/index.css';
+@import './popup/index.css';

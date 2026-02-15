@@ -8,263 +8,322 @@ import { capitalize } from '@src/utils/string';
 import { isNil, isPresent } from '@src/utils/type';
 
 import type { EventObjectWithDefaultValues } from '@t/events';
+import type { I18nStrings } from '@t/i18n';
 import type {
-  Template,
-  TemplateMonthDayName,
-  TemplateMonthGrid,
-  TemplateMoreTitleDate,
-  TemplateNow,
-  TemplateTimezone,
-  TemplateWeekDayName,
+    Template,
+    TemplateMonthDayName,
+    TemplateMonthGrid,
+    TemplateMoreTitleDate,
+    TemplateNow,
+    TemplateTimezone,
+    TemplateWeekDayName,
 } from '@t/template';
+
+import { getI18nStrings } from '@src/i18n';
 
 const SIXTY_MINUTES = 60;
 
-export const templates: Template = {
-  milestone(model: EventObjectWithDefaultValues) {
-    const classNames = cls('icon', 'ic-milestone');
+/**
+ * 템플릿을 생성하는 함수
+ * @param i18nStrings - 다국어 문자열 객체 (선택적)
+ * @returns Template 객체
+ */
+export function createTemplates(i18nStrings?: I18nStrings): Template {
+    // i18n 문자열이 제공되지 않으면 기본값(영어) 사용
+    const t = i18nStrings || getI18nStrings('en');
 
-    return (
-      <Fragment>
-        <span className={classNames} />
-        <span
-          style={{
-            backgroundColor: model.backgroundColor,
-          }}
-        >
-          {stripTags(model.title)}
-        </span>
-      </Fragment>
-    );
-  },
+    return {
+        milestone(model: EventObjectWithDefaultValues) {
+            const classNames = cls('icon', 'ic-milestone');
 
-  milestoneTitle() {
-    return <span className={cls('left-content')}>Milestone</span>;
-  },
+            return (
+                <Fragment>
+                    <span className={classNames} />
+                    <span
+                        style={{
+                            backgroundColor: model.backgroundColor,
+                        }}
+                    >
+                        {stripTags(model.title)}
+                    </span>
+                </Fragment>
+            );
+        },
 
-  task(model: EventObjectWithDefaultValues) {
-    return `#${model.title}`;
-  },
+        milestoneTitle() {
+            return <span className={cls('left-content')}>{t.milestoneTitle}</span>;
+        },
 
-  taskTitle() {
-    return <span className={cls('left-content')}>Task</span>;
-  },
+        task(model: EventObjectWithDefaultValues) {
+            return `#${model.title}`;
+        },
 
-  alldayTitle() {
-    return <span className={cls('left-content')}>All Day</span>;
-  },
+        taskTitle() {
+            return <span className={cls('left-content')}>{t.taskTitle}</span>;
+        },
 
-  allday(model: EventObjectWithDefaultValues) {
-    return stripTags(model.title);
-  },
+        alldayTitle() {
+            return <span className={cls('left-content')}>{t.alldayTitle}</span>;
+        },
 
-  time(model: EventObjectWithDefaultValues) {
-    const { start, title } = model;
+        allday(model: EventObjectWithDefaultValues) {
+            return stripTags(model.title);
+        },
 
-    if (start) {
-      return (
-        <span>
-          <strong>{toFormat(start, 'HH:mm')}</strong>&nbsp;<span>{stripTags(title)}</span>
-        </span>
-      );
-    }
+        time(model: EventObjectWithDefaultValues) {
+            const { start, title } = model;
 
-    return stripTags(title);
-  },
+            if (start) {
+                return (
+                    <span>
+                        <strong>{toFormat(start, 'HH:mm')}</strong>&nbsp;<span>{stripTags(title)}</span>
+                    </span>
+                );
+            }
 
-  goingDuration(model: EventObjectWithDefaultValues) {
-    const { goingDuration } = model;
-    const hour = Math.floor(goingDuration / SIXTY_MINUTES);
-    const minutes = goingDuration % SIXTY_MINUTES;
+            return stripTags(title);
+        },
 
-    return `GoingTime ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
-  },
+        goingDuration(model: EventObjectWithDefaultValues) {
+            const { goingDuration } = model;
+            const hour = Math.floor(goingDuration / SIXTY_MINUTES);
+            const minutes = goingDuration % SIXTY_MINUTES;
 
-  comingDuration(model: EventObjectWithDefaultValues) {
-    const { comingDuration } = model;
-    const hour = Math.floor(comingDuration / SIXTY_MINUTES);
-    const minutes = comingDuration % SIXTY_MINUTES;
+            return `${t.goingDuration} ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
+        },
 
-    return `ComingTime ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
-  },
+        comingDuration(model: EventObjectWithDefaultValues) {
+            const { comingDuration } = model;
+            const hour = Math.floor(comingDuration / SIXTY_MINUTES);
+            const minutes = comingDuration % SIXTY_MINUTES;
 
-  monthMoreTitleDate(moreTitle: TemplateMoreTitleDate) {
-    const { date, day } = moreTitle;
+            return `${t.comingDuration} ${leadingZero(hour, 2)}:${leadingZero(minutes, 2)}`;
+        },
 
-    const classNameDay = cls('more-title-date');
-    const classNameDayLabel = cls('more-title-day');
-    const dayName = capitalize(getDayName(day));
+        monthMoreTitleDate(moreTitle: TemplateMoreTitleDate) {
+            const { date, day } = moreTitle;
 
-    return (
-      <Fragment>
-        <span className={classNameDay}>{date}</span>
-        <span className={classNameDayLabel}>{dayName}</span>
-      </Fragment>
-    );
-  },
+            const classNameDay = cls('more-title-date');
+            const classNameDayLabel = cls('more-title-day');
+            const dayName = capitalize(getDayName(day));
 
-  monthMoreClose() {
-    return '';
-  },
+            return (
+                <Fragment>
+                    <span className={classNameDay}>{date}</span>
+                    <span className={classNameDayLabel}>{dayName}</span>
+                </Fragment>
+            );
+        },
 
-  monthGridHeader(model: TemplateMonthGrid) {
-    const date = parseInt(model.date.split('-')[2], 10);
-    const classNames = cls('weekday-grid-date', { 'weekday-grid-date-decorator': model.isToday });
+        monthMoreClose() {
+            return '';
+        },
 
-    return <span className={classNames}>{date}</span>;
-  },
+        monthGridHeader(model: TemplateMonthGrid) {
+            const date = parseInt(model.date.split('-')[2], 10);
+            const classNames = cls('weekday-grid-date', { 'weekday-grid-date-decorator': model.isToday });
 
-  monthGridHeaderExceed(hiddenEvents: number) {
-    const className = cls('weekday-grid-more-events');
+            return <span className={classNames}>{date}</span>;
+        },
 
-    return <span className={className}>{hiddenEvents} more</span>;
-  },
+        monthGridHeaderExceed(hiddenEvents: number) {
+            const className = cls('weekday-grid-more-events');
 
-  monthGridFooter(_model: TemplateMonthGrid) {
-    return '';
-  },
+            return <span className={className}>{hiddenEvents} {t.monthGridHeaderExceed}</span>;
+        },
 
-  monthGridFooterExceed(_hiddenEvents: number) {
-    return '';
-  },
+        monthGridFooter(_model: TemplateMonthGrid) {
+            return '';
+        },
 
-  monthDayName(model: TemplateMonthDayName) {
-    return model.label;
-  },
+        monthGridFooterExceed(_hiddenEvents: number) {
+            return '';
+        },
 
-  weekDayName(model: TemplateWeekDayName) {
-    const classDate = cls('day-name__date');
-    const className = cls('day-name__name');
+        monthDayName(model: TemplateMonthDayName) {
+            return model.label;
+        },
 
-    return (
-      <Fragment>
-        <span className={classDate}>{model.date}</span>&nbsp;&nbsp;
-        <span className={className}>{model.dayName}</span>
-      </Fragment>
-    );
-  },
+        weekDayName(model: TemplateWeekDayName) {
+            const classDate = cls('day-name__date');
+            const className = cls('day-name__name');
 
-  weekGridFooterExceed(hiddenEvents: number) {
-    return `+${hiddenEvents}`;
-  },
+            return (
+                <Fragment>
+                    <span className={classDate}>{model.date}</span>&nbsp;&nbsp;
+                    <span className={className}>{model.dayName}</span>
+                </Fragment>
+            );
+        },
 
-  collapseBtnTitle() {
-    const className = cls('collapse-btn-icon');
+        weekGridFooterExceed(hiddenEvents: number) {
+            return `+${hiddenEvents}`;
+        },
 
-    return <span className={className} />;
-  },
+        collapseBtnTitle() {
+            const className = cls('collapse-btn-icon');
 
-  timezoneDisplayLabel({ displayLabel, timezoneOffset }: TemplateTimezone) {
-    if (isNil(displayLabel) && isPresent(timezoneOffset)) {
-      const sign = timezoneOffset < 0 ? '-' : '+';
-      const hours = Math.abs(timezoneOffset / SIXTY_MINUTES);
-      const minutes = Math.abs(timezoneOffset % SIXTY_MINUTES);
+            return <span className={className} />;
+        },
 
-      return `GMT${sign}${leadingZero(hours, 2)}:${leadingZero(minutes, 2)}`;
-    }
+        timezoneDisplayLabel({ displayLabel, timezoneOffset }: TemplateTimezone) {
+            if (isNil(displayLabel) && isPresent(timezoneOffset)) {
+                const sign = timezoneOffset < 0 ? '-' : '+';
+                const hours = Math.abs(timezoneOffset / SIXTY_MINUTES);
+                const minutes = Math.abs(timezoneOffset % SIXTY_MINUTES);
 
-    return displayLabel as string;
-  },
+                return `GMT${sign}${leadingZero(hours, 2)}:${leadingZero(minutes, 2)}`;
+            }
 
-  timegridDisplayPrimaryTime(props: TemplateNow) {
-    const { time } = props;
+            return displayLabel as string;
+        },
 
-    return toFormat(time, 'hh tt');
-  },
+        timegridDisplayPrimaryTime(props: TemplateNow) {
+            const { time } = props;
 
-  timegridDisplayTime(props: TemplateNow) {
-    const { time } = props;
+            return toFormat(time, 'hh tt');
+        },
 
-    return toFormat(time, 'HH:mm');
-  },
+        timegridDisplayTime(props: TemplateNow) {
+            const { time } = props;
 
-  timegridNowIndicatorLabel(timezone: TemplateNow) {
-    const { time, format = 'HH:mm' } = timezone;
+            return toFormat(time, 'HH:mm');
+        },
 
-    return toFormat(time, format);
-  },
+        timegridNowIndicatorLabel(timezone: TemplateNow) {
+            const { time, format = 'HH:mm' } = timezone;
 
-  popupIsAllday() {
-    return 'All day';
-  },
+            return toFormat(time, format);
+        },
 
-  popupStateFree() {
-    return 'Free';
-  },
+        popupIsAllday() {
+            return t.popupIsAllday;
+        },
 
-  popupStateBusy() {
-    return 'Busy';
-  },
+        popupStateFree() {
+            return t.popupStateFree;
+        },
 
-  titlePlaceholder() {
-    return 'Subject';
-  },
+        popupStateBusy() {
+            return t.popupStateBusy;
+        },
 
-  locationPlaceholder() {
-    return 'Location';
-  },
+        titlePlaceholder() {
+            return t.titlePlaceholder;
+        },
 
-  startDatePlaceholder() {
-    return 'Start date';
-  },
+        locationPlaceholder() {
+            return t.locationPlaceholder;
+        },
 
-  endDatePlaceholder() {
-    return 'End date';
-  },
+        recurrencePlaceholder() {
+            return t.recurrencePlaceholder;
+        },
 
-  popupSave() {
-    return 'Save';
-  },
+        startDatePlaceholder() {
+            return t.startDatePlaceholder;
+        },
 
-  popupUpdate() {
-    return 'Update';
-  },
+        endDatePlaceholder() {
+            return t.endDatePlaceholder;
+        },
 
-  popupEdit() {
-    return 'Edit';
-  },
+        popupSave() {
+            return t.popupSave;
+        },
 
-  popupDelete() {
-    return 'Delete';
-  },
+        popupUpdate() {
+            return t.popupUpdate;
+        },
 
-  popupDetailTitle({ title }: EventObjectWithDefaultValues) {
-    return title;
-  },
+        popupEdit() {
+            return t.popupEdit;
+        },
 
-  popupDetailDate({ isAllday, start, end }: EventObjectWithDefaultValues) {
-    const dayFormat = 'YYYY.MM.DD';
-    const timeFormat = 'hh:mm tt';
-    const detailFormat = `${dayFormat} ${timeFormat}`;
-    const startDate = toFormat(start, isAllday ? dayFormat : timeFormat);
-    const endDateFormat = isSameDate(start, end) ? timeFormat : detailFormat;
+        popupDelete() {
+            return t.popupDelete;
+        },
 
-    if (isAllday) {
-      return `${startDate}${isSameDate(start, end) ? '' : ` - ${toFormat(end, dayFormat)}`}`;
-    }
+        popupDetailTitle({ title }: EventObjectWithDefaultValues) {
+            return title;
+        },
 
-    return `${toFormat(start, detailFormat)} - ${toFormat(end, endDateFormat)}`;
-  },
+        popupDetailDate({ isAllday, start, end }: EventObjectWithDefaultValues) {
+            const dayFormat = 'YYYY.MM.DD';
+            const timeFormat = 'hh:mm tt';
+            const detailFormat = `${dayFormat} ${timeFormat}`;
+            const startDate = toFormat(start, isAllday ? dayFormat : timeFormat);
+            const endDateFormat = isSameDate(start, end) ? timeFormat : detailFormat;
 
-  popupDetailLocation({ location }: EventObjectWithDefaultValues) {
-    return location;
-  },
+            if (isAllday) {
+                return `${startDate}${isSameDate(start, end) ? '' : ` - ${toFormat(end, dayFormat)}`}`;
+            }
 
-  popupDetailAttendees({ attendees = [] }: EventObjectWithDefaultValues) {
-    return attendees.join(', ');
-  },
+            return `${toFormat(start, detailFormat)} - ${toFormat(end, endDateFormat)}`;
+        },
 
-  popupDetailState({ state }: EventObjectWithDefaultValues) {
-    return state || 'Busy';
-  },
+        popupDetailLocation({ location }: EventObjectWithDefaultValues) {
+            return location;
+        },
 
-  popupDetailRecurrenceRule({ recurrenceRule }: EventObjectWithDefaultValues) {
-    return recurrenceRule;
-  },
+        popupDetailAttendees({ attendees = [] }: EventObjectWithDefaultValues) {
+            return attendees.join(', ');
+        },
 
-  popupDetailBody({ body }: EventObjectWithDefaultValues) {
-    return body;
-  },
-};
+        popupDetailState({ state }: EventObjectWithDefaultValues) {
+            return state || t.popupStateBusy;
+        },
+
+        popupDetailRecurrenceRule({ recurrenceRule }: EventObjectWithDefaultValues) {
+            if (!recurrenceRule || !recurrenceRule.repeat) {
+                return '';
+            }
+
+            const { repeat } = recurrenceRule;
+            const frequencyLabels: Record<string, string> = {
+                daily: t.recurrenceDaily || '일일',
+                weekly: t.recurrenceWeekly || '주간',
+                monthly: t.recurrenceMonthly || '월간',
+                yearly: t.recurrenceYearly || '연간',
+            };
+
+            const frequencyLabel = frequencyLabels[repeat.frequency] || repeat.frequency;
+            const interval = repeat.interval || 1;
+            let description = `${interval}${frequencyLabel === '일일' ? '일' : frequencyLabel === '주간' ? '주' : frequencyLabel === '월간' ? '개월' : '년'}마다`;
+
+            if (repeat.frequency === 'weekly' && repeat.byDay && repeat.byDay.length > 0) {
+                const dayLabels: Record<string, string> = {
+                    MO: '월',
+                    TU: '화',
+                    WE: '수',
+                    TH: '목',
+                    FR: '금',
+                    SA: '토',
+                    SU: '일',
+                };
+                const days = repeat.byDay.map((day) => dayLabels[day] || day).join(', ');
+                description += ` (${days}요일)`;
+            }
+
+            if (recurrenceRule.count) {
+                description += `, ${recurrenceRule.count}회`;
+            } else if (recurrenceRule.until && recurrenceRule.until !== 'forever') {
+                const untilDate = new Date(recurrenceRule.until);
+                description += `, ${untilDate.toLocaleDateString()}까지`;
+            }
+
+            return description;
+        },
+
+        popupDetailBody({ body }: EventObjectWithDefaultValues) {
+            return body;
+        },
+    };
+}
+
+/**
+ * 기본 템플릿 (영어, 하위 호환성을 위해 유지)
+ */
+export const templates = createTemplates();
 
 export type TemplateName = keyof Template;
