@@ -213,29 +213,29 @@ export function RecurrenceInputBox({
       }
       prevRecurrenceRef.current = recurrence;
       
-      if (recurrence) {
-        const repeat = recurrence.repeat;
+    if (recurrence) {
+      const repeat = recurrence.repeat;
         console.log('[recurrenceInput] repeat 설정:', repeat);
         
         // frequency 설정
-        setFrequency(repeat.frequency);
+      setFrequency(repeat.frequency);
         
         // interval 설정
-        if ('interval' in repeat) {
-          setInterval(repeat.interval || 1);
-        }
+      if ('interval' in repeat) {
+        setInterval(repeat.interval || 1);
+      }
         
         // byDay 설정 (weekly 또는 monthly/yearly의 요일 위치)
         if ('byDay' in repeat && repeat.byDay && repeat.byDay.length > 0) {
-          if (repeat.frequency === 'weekly') {
-            setSelectedDays(repeat.byDay as DayOfWeek[]);
+        if (repeat.frequency === 'weekly') {
+          setSelectedDays(repeat.byDay as DayOfWeek[]);
             console.log('[recurrenceInput] selectedDays 설정:', repeat.byDay);
-          } else {
-            const parsed = parseDayWithPosition(repeat.byDay as DayOfWeekWithPosition[]);
-            setWeekPosition(parsed.position);
-            setWeekDay(parsed.day);
+        } else {
+          const parsed = parseDayWithPosition(repeat.byDay as DayOfWeekWithPosition[]);
+          setWeekPosition(parsed.position);
+          setWeekDay(parsed.day);
             console.log('[recurrenceInput] weekPosition, weekDay 설정:', parsed);
-          }
+        }
         } else {
           // byDay가 없으면 초기화
           if (repeat.frequency === 'weekly') {
@@ -248,15 +248,15 @@ export function RecurrenceInputBox({
         
         // byMonthDay 설정
         if ('byMonthDay' in repeat && repeat.byMonthDay && repeat.byMonthDay.length > 0) {
-          setMonthDay(repeat.byMonthDay[0]);
+        setMonthDay(repeat.byMonthDay[0]);
           console.log('[recurrenceInput] monthDay 설정:', repeat.byMonthDay[0]);
         } else {
           setMonthDay(null);
-        }
+      }
         
         // byMonth 설정 (yearly)
         if ('byMonth' in repeat && repeat.byMonth && repeat.byMonth.length > 0) {
-          setSelectedMonths(repeat.byMonth);
+        setSelectedMonths(repeat.byMonth);
           console.log('[recurrenceInput] selectedMonths 설정:', repeat.byMonth);
         } else {
           setSelectedMonths([]);
@@ -266,11 +266,11 @@ export function RecurrenceInputBox({
         // 사용자가 직접 변경한 경우에는 prop에서 오는 값으로 덮어쓰지 않음
         if (!userChangedEndTypeRef.current) {
           if (recurrence.count !== undefined && recurrence.count !== null) {
-            setEndType('count');
-            setCount(recurrence.count);
+        setEndType('count');
+        setCount(recurrence.count);
             console.log('[recurrenceInput] endType: count, count:', recurrence.count);
           } else if (recurrence.until && recurrence.until !== 'forever') {
-            setEndType('until');
+        setEndType('until');
             setUntil(getUntilInitialValue(recurrence.until));
             console.log('[recurrenceInput] endType: until, until:', getUntilInitialValue(recurrence.until));
           } else {
@@ -287,7 +287,7 @@ export function RecurrenceInputBox({
             setUntil(getUntilInitialValue(recurrence.until));
           }
         }
-    } else {
+      } else {
       // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
       // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
       if (!isRepeat) {
@@ -300,8 +300,8 @@ export function RecurrenceInputBox({
         setWeekDay(null);
         setSelectedMonths([]);
         if (!userChangedEndTypeRef.current) {
-          setEndType('forever');
-        }
+        setEndType('forever');
+      }
         setCount(10);
         setUntil('');
         userChangedEndTypeRef.current = false; // 초기화 시 플래그도 리셋
@@ -558,18 +558,18 @@ export function RecurrenceInputBox({
           <div className={cls('recurrence-option-item')}>
             <label className={cls('recurrence-label')}>반복 빈도</label>
             <div className={classNames.frequencySelect}>
-              <select
+            <select
                 className={classNames.frequencySelectInput}
-                value={frequency}
-                onChange={(e) => setFrequency(e.currentTarget.value as RepeatFrequency)}
-              >
-                {FREQUENCY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              value={frequency}
+              onChange={(e) => setFrequency(e.currentTarget.value as RepeatFrequency)}
+            >
+              {FREQUENCY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           </div>
 
           {/* 빈도별 옵션 컴포넌트 */}
@@ -611,7 +611,7 @@ export function RecurrenceInputBox({
               onMonthDayChange={setMonthDay}
               onWeekPositionChange={setWeekPosition}
               onWeekDayChange={setWeekDay}
-            />
+                  />
           )}
 
           {/* 종료 조건 */}
@@ -622,7 +622,7 @@ export function RecurrenceInputBox({
             onEndTypeChange={handleEndTypeChange}
             onCountChange={setCount}
             onUntilChange={setUntil}
-          />
+              />
         </div>
       )}
     </>

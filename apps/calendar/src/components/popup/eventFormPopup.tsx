@@ -300,13 +300,6 @@ export function EventFormPopup() {
           changes.recurrenceRule = eventData.recurrenceRule;
         }
       }
-      
-      console.log('eventFormPopup - changes:', changes);
-      console.log('eventFormPopup - eventData.recurrenceRule:', eventData.recurrenceRule);
-      console.log('eventFormPopup - eventData.isRepeat:', eventData.isRepeat);
-      console.log('eventFormPopup - event.recurrenceRule:', event.recurrenceRule);
-      console.log('eventFormPopup - event.isRepeat:', event.isRepeat);
-
       eventBus.fire('beforeUpdateEvent', { event: eventObject, changes });
     }
     hideAllPopup();
