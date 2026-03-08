@@ -179,7 +179,22 @@ export default class ToastUIReactCalendar extends React.Component<Props> {
 
               // series 편집은 호스트가 처리 (this/thisAndFuture/all)
               if (!isRecurring && !recurrenceActionOption && eventObj?.id && eventObj?.calendarId) {
-                this.calendarInstance.updateEvent(eventObj.id, eventObj.calendarId, changes);
+                // changes와 eventObj를 합쳐서 완전한 업데이트 데이터 생성
+                const mergedChanges = {
+                  ...eventObj,
+                  ...changes,
+                  // changes에 명시적으로 포함된 속성 우선
+                  start: changes?.start ?? eventObj?.start,
+                  end: changes?.end ?? eventObj?.end,
+                  title: changes?.title ?? eventObj?.title,
+                  isAllday: changes?.isAllday ?? eventObj?.isAllday,
+                  location: changes?.location ?? eventObj?.location,
+                  body: changes?.body ?? eventObj?.body,
+                  color: changes?.color ?? eventObj?.color,
+                  backgroundColor: changes?.backgroundColor ?? eventObj?.backgroundColor,
+                  borderColor: changes?.borderColor ?? eventObj?.borderColor,
+                };
+                this.calendarInstance.updateEvent(eventObj.id, eventObj.calendarId, mergedChanges);
               }
             }
 
