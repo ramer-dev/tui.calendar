@@ -11,6 +11,8 @@ import { DateSelector } from '@src/components/popup/dateSelector';
 import { EventStateSelector } from '@src/components/popup/eventStateSelector';
 import { LocationInputBox } from '@src/components/popup/locationInputBox';
 import { RecurrenceInputBox } from '@src/components/popup/recurrenceInput';
+import { ReminderInputBox } from '@src/components/popup/reminderInput';
+import type { ReminderValue } from '@src/components/popup/reminderInput';
 import { PopupSection } from '@src/components/popup/popupSection';
 import { TitleInputBox } from '@src/components/popup/titleInputBox';
 import { Template } from '@src/components/template';
@@ -75,6 +77,36 @@ function calculatePopupPosition(
 
 function isBooleanKey(key: string): key is BooleanKeyOfEventObject {
   return BOOLEAN_KEYS_OF_EVENT_MODEL_DATA.indexOf(key as BooleanKeyOfEventObject) !== -1;
+}
+
+// Momento 확장 — 새 일정을 만들 때 "알림" 기본값. 앱(App.tsx)이 설정 화면의 값을
+// window.__momentoDefaultReminder에 게시해두면 그 값을, 없으면 안전한 기본값을 사용한다.
+function getDefaultReminder(): ReminderValue {
+  const published = (window as any).__momentoDefaultReminder;
+  if (published && typeof published.value === 'number' && typeof published.unit === 'string') {
+    return { reminderEnabled: false, reminderValue: published.value, reminderUnit: published.unit };
+  }
+  return { reminderEnabled: false, reminderValue: 10, reminderUnit: '분' };
+}
+
+// event.raw에 저장된 개별 알림 설정을 읽는다 (없으면 새 기본값)
+function getReminderFromRaw(raw: unknown): ReminderValue {
+  const reminder = (raw as any)?.reminder;
+  if (reminder && typeof reminder === 'object') {
+    return {
+      reminderEnabled: !!reminder.reminderEnabled,
+      reminderValue:
+        typeof reminder.reminderValue === 'number' ? reminder.reminderValue : 10,
+      reminderUnit:
+        reminder.reminderUnit === '초' ||
+        reminder.reminderUnit === '분' ||
+        reminder.reminderUnit === '시간' ||
+        reminder.reminderUnit === '일'
+          ? reminder.reminderUnit
+          : '분',
+    };
+  }
+  return getDefaultReminder();
 }
 
 function getChanges(event: EventModel, eventObject: EventObject) {
@@ -145,6 +177,9 @@ export function EventFormPopup() {
   const eventBus = useEventBus();
   const formPopupSlot = useFloatingLayer('formPopupSlot');
   const [formState, formStateDispatch] = useFormState(calendars[0]?.id);
+  // Momento 확장 — 일정별 알림. EventObject/EventModel의 정식 필드가 아니라서 formState
+  // reducer를 거치지 않고 별도 로컬 상태로 관리한 뒤, 제출 시 eventData.raw에 병합한다.
+  const [reminder, setReminder] = useState<ReminderValue>(getDefaultReminder());
 
   const datePickerRef = useRef<DateRangePicker>(null);
   const popupContainerRef = useRef<HTMLDivElement>(null);
@@ -240,6 +275,12 @@ export function EventFormPopup() {
       });
       
       console.log('[eventFormPopup] formState 초기화 완료 - isRepeat:', isRepeat, 'recurrenceRule:', isRepeat ? recurrenceRule : undefined);
+
+      // Momento 확장 — 이 일정에 저장된 알림 설정을 raw에서 읽어온다 (없으면 기본값)
+      setReminder(getReminderFromRaw(event.raw));
+    } else if (isPresent(popupParams) && isNil(event)) {
+      // 새 일정 생성 팝업이 열릴 때마다 설정 화면의 최신 기본값으로 갱신
+      setReminder(getDefaultReminder());
     }
   }, [calendars, event, formStateDispatch, popupParams]);
 
@@ -247,6 +288,7 @@ export function EventFormPopup() {
   useEffect(() => {
     if (isNil(popupParams)) {
       formStateDispatch({ type: FormStateActionType.reset });
+      setReminder(getDefaultReminder());
     }
   }, [formStateDispatch, popupParams]);
 
@@ -270,6 +312,11 @@ export function EventFormPopup() {
     // formState에서 recurrenceRule과 isRepeat 명시적으로 설정
     eventData.isRepeat = formState.isRepeat;
     eventData.recurrenceRule = formState.isRepeat ? formState.recurrenceRule : undefined;
+
+    // Momento 확장 — 알림 설정을 raw에 병합 (기존 raw의 다른 값은 보존)
+    const existingRaw =
+      event && event.raw && typeof event.raw === 'object' ? (event.raw as Record<string, unknown>) : {};
+    eventData.raw = { ...existingRaw, reminder };
 
     console.log('[eventFormPopup] onSubmit - eventData:', {
       isRepeat: eventData.isRepeat,
@@ -340,6 +387,7 @@ export function EventFormPopup() {
               isRepeat={formState.isRepeat}
               startDate={start}
             />
+            <ReminderInputBox value={reminder} onChange={setReminder} />
             <ClosePopupButton type="form" close={close} />
           </div>
           <div className={cls('form-container-footer')}>
