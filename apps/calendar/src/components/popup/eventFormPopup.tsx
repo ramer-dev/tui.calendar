@@ -214,7 +214,7 @@ export function EventFormPopup() {
       setArrowLeft(arrowLeftPosition);
       setArrowDirection(direction);
     }
-  }, [layoutContainer, popupArrowPointPosition, formState.isRepeat]); // formState.isRepeat 추가: recurrence 활성화 시 위치 재계산
+  }, [layoutContainer, popupArrowPointPosition, formState.isRepeat, reminder.reminderEnabled]); // isRepeat/reminderEnabled: 옵션 영역이 펼쳐질 때 위치 재계산
 
   // Sync store's popupParams with formState when editing event
   useEffect(() => {
@@ -381,13 +381,15 @@ export function EventFormPopup() {
               formStateDispatch={formStateDispatch}
               ref={datePickerRef}
             />
-            <RecurrenceInputBox
-              recurrence={formState.recurrenceRule}
-              formStateDispatch={formStateDispatch}
-              isRepeat={formState.isRepeat}
-              startDate={start}
-            />
-            <ReminderInputBox value={reminder} onChange={setReminder} />
+            <div className={cls('popup-section-toggle-row')}>
+              <RecurrenceInputBox
+                recurrence={formState.recurrenceRule}
+                formStateDispatch={formStateDispatch}
+                isRepeat={formState.isRepeat}
+                startDate={start}
+              />
+              <ReminderInputBox value={reminder} onChange={setReminder} />
+            </div>
             <ClosePopupButton type="form" close={close} />
           </div>
           <div className={cls('form-container-footer')}>

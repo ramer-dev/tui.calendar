@@ -4,10 +4,10 @@ import { PopupSection } from '@src/components/popup/popupSection';
 import { cls } from '@src/helpers/css';
 
 /**
- * Momento 확장 — 일정별 알림("몇 분 전에 알릴지")을 켜고 끄는 UI.
- * EventModel/EventObject의 정식 필드가 아니라 raw JSON을 통해서만 앱과 왕복하므로
- * (eventFormPopup.tsx의 onSubmit에서 eventData.raw.reminder로 병합됨), 이 컴포넌트는
- * 완전히 컨트롤드 컴포넌트로 두고 값/변경 콜백만 부모(EventFormPopup)로부터 받는다.
+ * Momento 확장 — 일정별 알림("몇 분 전에 알릴지") 입력 UI.
+ * recurrenceInput.tsx와 같은 구조(체크박스 행 + 펼쳐지는 옵션 영역)이며, 같은 CSS 클래스를 쓴다.
+ * EventModel의 정식 필드가 아니라 raw JSON(event.raw.reminder)으로만 앱과 왕복하므로
+ * formState reducer를 거치지 않는 컨트롤드 컴포넌트로 두고, 값/변경 콜백은 EventFormPopup이 관리한다.
  */
 export type ReminderUnit = '초' | '분' | '시간' | '일';
 
@@ -26,12 +26,13 @@ const REMINDER_UNIT_OPTIONS: ReminderUnit[] = ['분', '시간', '일', '초'];
 
 const classNames = {
   content: cls('content'),
-  row: cls('popup-section-item', 'popup-section-reminder'),
+  reminder: cls('popup-section-item', 'popup-section-reminder', 'popup-section-toggle'),
   options: cls('recurrence-options'),
   optionItem: cls('recurrence-option-item'),
   label: cls('recurrence-label'),
-  inputWrapper: cls('recurrence-input-wrapper'),
   input: cls('recurrence-input'),
+  inputWrapper: cls('recurrence-input-wrapper'),
+  unit: cls('recurrence-unit'),
   selectWrapper: cls('recurrence-select-wrapper'),
   select: cls('recurrence-select'),
 };
@@ -39,14 +40,13 @@ const classNames = {
 export function ReminderInputBox({ value, onChange }: Props) {
   const { reminderEnabled, reminderValue, reminderUnit } = value;
 
-  const handleToggle = () => {
-    onChange({ ...value, reminderEnabled: !reminderEnabled });
-  };
-
   return (
     <>
       <PopupSection>
-        <div className={classNames.row} onClick={handleToggle}>
+        <div
+          className={classNames.reminder}
+          onClick={() => onChange({ ...value, reminderEnabled: !reminderEnabled })}
+        >
           <span
             className={cls('icon', {
               'ic-checkbox-normal': !reminderEnabled,
@@ -67,38 +67,39 @@ export function ReminderInputBox({ value, onChange }: Props) {
       {reminderEnabled && (
         <div className={classNames.options}>
           <div className={classNames.optionItem}>
-            <label className={classNames.label}>몇 분 전에 알릴지</label>
+            <label className={classNames.label}>알림 시점</label>
             <div className={classNames.inputWrapper}>
               <input
                 type="number"
                 className={classNames.input}
                 min="0"
-                step="1"
                 value={reminderValue}
-                onInput={(e) => {
-                  const raw = (e.target as HTMLInputElement).value;
-                  const next = Math.max(0, Math.floor(Number(raw) || 0));
-                  onChange({ ...value, reminderValue: next });
-                }}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    reminderValue: Math.max(0, parseInt(e.currentTarget.value) || 0),
+                  })
+                }
               />
-              <div className={classNames.selectWrapper}>
-                <select
-                  className={classNames.select}
-                  value={reminderUnit}
-                  onChange={(e) => {
-                    onChange({
-                      ...value,
-                      reminderUnit: (e.target as HTMLSelectElement).value as ReminderUnit,
-                    });
-                  }}
-                >
-                  {REMINDER_UNIT_OPTIONS.map((unit) => (
-                    <option key={unit} value={unit}>
-                      {unit} 전
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <span className={classNames.unit}>{reminderUnit} 전에 알림</span>
+            </div>
+          </div>
+          <div className={classNames.optionItem}>
+            <label className={classNames.label}>단위</label>
+            <div className={classNames.selectWrapper}>
+              <select
+                className={classNames.select}
+                value={reminderUnit}
+                onChange={(e) =>
+                  onChange({ ...value, reminderUnit: e.currentTarget.value as ReminderUnit })
+                }
+              >
+                {REMINDER_UNIT_OPTIONS.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>

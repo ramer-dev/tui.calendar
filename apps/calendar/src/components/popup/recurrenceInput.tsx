@@ -34,7 +34,7 @@ interface Props {
 
 const classNames = {
   content: cls('content'),
-  repeat: cls('popup-section-item', 'popup-section-repeat'),
+  repeat: cls('popup-section-item', 'popup-section-repeat', 'popup-section-toggle'),
   repeatOptions: cls('recurrence-options'),
   frequencySelect: cls('recurrence-select-wrapper'),
   frequencySelectInput: cls('recurrence-select'),
@@ -539,8 +539,8 @@ export function RecurrenceInputBox({
               'ic-checkbox-checked': isRepeat,
             })}
           />
-          <span className={classNames.content}>
-            <Template template="recurrencePlaceholder" />
+          <span className={classNames.content}> 
+            <Template template="recurrencePlaceholder"/>
           </span>
           <input
             name="isRepeat"

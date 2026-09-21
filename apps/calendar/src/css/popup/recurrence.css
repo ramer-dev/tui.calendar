@@ -230,3 +230,39 @@
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 }
+
+/* 반복/알림 체크박스를 한 줄에 나란히 두고, 펼쳐진 옵션 영역은 그 아래 전체 폭으로 배치 */
+.popup-section-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+}
+
+.popup-section-toggle-row > .popup-section {
+  order: 0;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.popup-section-toggle-row > .popup-section .popup-section-item {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.popup-section-toggle-row > .recurrence-options {
+  order: 1;
+  flex: 0 0 100%;
+}
+
+/* 체크박스 + 라벨 한 줄짜리 섹션(반복/알림): 내용을 세로 가운데로 정렬해 다른 입력 행(30px)과 높이를 맞춘다.
+   Template은 기본 div를 내보내므로 as="span"으로 쓰고, 높이는 flex 정렬이 책임진다. */
+.popup-section-item.popup-section-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.popup-section-item.popup-section-toggle .content {
+  line-height: 30px;
+  vertical-align: baseline;
+}
