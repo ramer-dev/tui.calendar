@@ -266,3 +266,22 @@
   line-height: 30px;
   vertical-align: baseline;
 }
+
+/* "이 일정만 수정" 시 반복/알림 대신 보여주는 안내 문구 */
+.popup-section-item.popup-section-note {
+  height: auto;
+  min-height: 32px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  white-space: normal;
+  cursor: default;
+}
+
+.popup-section-item.popup-section-note .content {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #888;
+  white-space: normal;
+  padding-left: 0;
+}

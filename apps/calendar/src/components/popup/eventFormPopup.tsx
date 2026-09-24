@@ -198,6 +198,13 @@ export function EventFormPopup() {
     return cls('popup-arrow', { top, bottom });
   }, [arrowDirection]);
 
+  // Momento 확장 — "이 일정만 수정"인지 여부.
+  // event_exceptions 테이블(예외 인스턴스 저장소)은 반복 규칙이나 알림(raw)을 갖지 않으므로,
+  // 이 화면에서 반복/알림을 고쳐도 저장 시 그대로 버려진다. 그래서 혼동을 막기 위해 아예
+  // 편집 UI를 숨기고, 반복/알림은 "이 일정 및 향후" 또는 "모든 일정 수정"으로 안내한다.
+  const isSingleInstanceEdit =
+    !isCreationPopup && popupParams?.recurrenceActionOption === 'this';
+
   useLayoutEffect(() => {
     if (popupContainerRef.current && popupArrowPointPosition && layoutContainer) {
       const layoutRect = layoutContainer.getBoundingClientRect();
@@ -230,8 +237,9 @@ export function EventFormPopup() {
       }
       
       // event.isRepeat가 true이거나 recurrenceRule이 있으면 반복 이벤트로 간주
-      const isRepeat = event.isRepeat || !!recurrenceRule;
-      
+      // 단, "이 일정만 수정"은 예외(단일 인스턴스)로 저장되므로 반복 규칙 자체를 다루지 않는다
+      const isRepeat = !isSingleInstanceEdit && (event.isRepeat || !!recurrenceRule);
+
       // recurrenceRule이 있으면 상세 정보 로깅
       if (recurrenceRule) {
         console.log('[eventFormPopup] 수정 시 formState 초기화 - recurrenceRule 상세:', {
@@ -282,7 +290,7 @@ export function EventFormPopup() {
       // 새 일정 생성 팝업이 열릴 때마다 설정 화면의 최신 기본값으로 갱신
       setReminder(getDefaultReminder());
     }
-  }, [calendars, event, formStateDispatch, popupParams]);
+  }, [calendars, event, formStateDispatch, popupParams, isSingleInstanceEdit]);
 
   // Reset form states when closing the popup
   useEffect(() => {
@@ -381,15 +389,28 @@ export function EventFormPopup() {
               formStateDispatch={formStateDispatch}
               ref={datePickerRef}
             />
-            <div className={cls('popup-section-toggle-row')}>
-              <RecurrenceInputBox
-                recurrence={formState.recurrenceRule}
-                formStateDispatch={formStateDispatch}
-                isRepeat={formState.isRepeat}
-                startDate={start}
-              />
-              <ReminderInputBox value={reminder} onChange={setReminder} />
-            </div>
+            {isSingleInstanceEdit ? (
+              // "이 일정만 수정"은 반복 규칙과 알림(raw)을 저장하지 않는 예외 레코드로 남으므로,
+              // 편집 UI 대신 안내만 보여준다 (반복/알림을 바꾸려면 다른 수정 범위를 선택해야 함).
+              <PopupSection>
+                <div className={cls('popup-section-item', 'popup-section-note')}>
+                  <span className={cls('content')}>
+                    반복·알림 설정은 이 일정만 수정할 때는 바꿀 수 없습니다. 「이 일정 및 향후
+                    일정」 또는 「모든 일정」 수정을 선택해 주세요.
+                  </span>
+                </div>
+              </PopupSection>
+            ) : (
+              <div className={cls('popup-section-toggle-row')}>
+                <RecurrenceInputBox
+                  recurrence={formState.recurrenceRule}
+                  formStateDispatch={formStateDispatch}
+                  isRepeat={formState.isRepeat}
+                  startDate={start}
+                />
+                <ReminderInputBox value={reminder} onChange={setReminder} />
+              </div>
+            )}
             <ClosePopupButton type="form" close={close} />
           </div>
           <div className={cls('form-container-footer')}>

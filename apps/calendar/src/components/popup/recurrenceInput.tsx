@@ -87,7 +87,21 @@ export function RecurrenceInputBox({
   const [endType, setEndType] = useState<'count' | 'until' | 'forever'>(
     recurrence?.count ? 'count' : recurrence?.until ? 'until' : 'forever'
   );
-  
+
+  // Momento 수정 — 반복 규칙의 기준 시작일(anchor)과 recurrenceId.
+  // 기존에는 아래 createRecurrenceRule에서 항상 startDate prop(=팝업을 연 인스턴스 자신의 날짜)으로
+  // 새 규칙을 만들어서, "모든 일정 수정"으로 아무 인스턴스나 열기만 해도 시리즈 시작일이
+  // 클릭한 인스턴스 날짜로 바뀌고 recurrenceId도 사라지는 버그가 있었다(예: 반복 5회 중 3회차를
+  // 삭제 후 5회차를 "모든 일정 수정"으로 열면 1~4회차가 사라지고 5회차부터 다시 5회 반복됨).
+  // 기존 규칙(recurrence)이 있으면 그 시작일/recurrenceId를 그대로 유지하고,
+  // 새로 반복을 켜는 경우(recurrence 없음)에만 지금 팝업이 연 날짜(startDate)를 기준으로 삼는다.
+  const [anchorStartDate, setAnchorStartDate] = useState<string | Date | TZDate | undefined>(
+    recurrence?.startDate ?? startDate
+  );
+  const [recurrenceIdState, setRecurrenceIdState] = useState<string | undefined>(
+    recurrence?.recurrenceId
+  );
+
   // 사용자가 endType을 직접 변경했는지 추적하는 ref
   const userChangedEndTypeRef = useRef<boolean>(false);
   
@@ -216,7 +230,13 @@ export function RecurrenceInputBox({
     if (recurrence) {
       const repeat = recurrence.repeat;
         console.log('[recurrenceInput] repeat 설정:', repeat);
-        
+
+        // Momento 수정 — 시리즈의 기준 시작일/recurrenceId는 항상 prop 그대로 따라간다
+        // (아래 startDate prop으로 덮어쓰지 않음 — 어떤 인스턴스를 열어서 수정하든 시리즈 자체의
+        // 시작일은 바뀌면 안 된다)
+        setAnchorStartDate(recurrence.startDate);
+        setRecurrenceIdState(recurrence.recurrenceId);
+
         // frequency 설정
       setFrequency(repeat.frequency);
         
@@ -304,6 +324,9 @@ export function RecurrenceInputBox({
       }
         setCount(10);
         setUntil('');
+        // 기존 규칙이 없는 상태이므로, 반복을 새로 켤 때의 기준 시작일은 지금 팝업이 연 날짜로
+        setAnchorStartDate(startDate);
+        setRecurrenceIdState(undefined);
         userChangedEndTypeRef.current = false; // 초기화 시 플래그도 리셋
       }
     }
@@ -337,8 +360,11 @@ export function RecurrenceInputBox({
   }, [frequency]);
 
   // recurrence rule 생성
+  // Momento 수정 — 기준 시작일은 startDate prop(=지금 연 인스턴스의 날짜)이 아니라
+  // anchorStartDate(기존 규칙이 있으면 그 시작일, 새로 반복을 켜는 경우에만 startDate)를 쓴다.
+  const ruleAnchorDate = anchorStartDate ?? startDate;
   const createRecurrenceRule = useMemo((): RecurrenceRule | undefined => {
-    if (!isRepeat || !startDate) {
+    if (!isRepeat || !ruleAnchorDate) {
       return undefined;
     }
 
@@ -395,23 +421,26 @@ export function RecurrenceInputBox({
         break;
     }
 
-    // startDate를 ISO 문자열로 변환 (전체 날짜/시간 정보 유지)
+    // 기준 시작일을 ISO 문자열로 변환 (전체 날짜/시간 정보 유지)
     let ruleStartDate: string | Date;
-    if (!startDate) {
+    if (!ruleAnchorDate) {
       ruleStartDate = new TZDate().toDate().toISOString();
-    } else if (typeof startDate === 'string') {
-      ruleStartDate = startDate;
-    } else if (startDate instanceof TZDate) {
-      ruleStartDate = startDate.toDate().toISOString();
-    } else if (startDate instanceof Date) {
-      ruleStartDate = startDate.toISOString();
+    } else if (typeof ruleAnchorDate === 'string') {
+      ruleStartDate = ruleAnchorDate;
+    } else if (ruleAnchorDate instanceof TZDate) {
+      ruleStartDate = ruleAnchorDate.toDate().toISOString();
+    } else if (ruleAnchorDate instanceof Date) {
+      ruleStartDate = ruleAnchorDate.toISOString();
     } else {
-      ruleStartDate = new TZDate(startDate).toDate().toISOString();
+      ruleStartDate = new TZDate(ruleAnchorDate).toDate().toISOString();
     }
 
     const rule: RecurrenceRule = {
       repeat,
       startDate: ruleStartDate,
+      // recurrenceId를 유지해야 앱이 이 규칙을 어느 마스터 이벤트의 것인지 식별할 수 있다
+      // (없으면 undefined — 새로 반복을 켜는 경우이며, 저장 시 마스터 자신의 id로 채워짐)
+      ...(recurrenceIdState ? { recurrenceId: recurrenceIdState } : {}),
     };
 
     if (endType === 'count') {
@@ -445,7 +474,8 @@ export function RecurrenceInputBox({
     return rule;
   }, [
     isRepeat,
-    startDate,
+    ruleAnchorDate,
+    recurrenceIdState,
     frequency,
     interval,
     selectedDays,
