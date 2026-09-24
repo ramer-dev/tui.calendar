@@ -289,7 +289,13 @@ export function HorizontalEvent({
         ) : null}
         {showReminderIcon ? <i className={classNames.eventAlarmIcon} /> : null}
         <span className={classNames.eventTitle}>
-          <Template template={uiModel.model.category} param={uiModel.model} />
+          {/* Momento 수정 — 종일 일정도 category는 항상 'time'으로 저장되어(isAllday로만 구분),
+              'time' 템플릿이 그대로 쓰이면 종일 일정에도 "HH:mm 제목"처럼 시간이 붙어 나왔다.
+              isAllday면 시간 없이 제목만 보여주는 'allday' 템플릿을 강제로 쓴다. */}
+          <Template
+            template={uiModel.model.isAllday ? 'allday' : uiModel.model.category}
+            param={uiModel.model}
+          />
         </span>
         {!shouldHideResizeHandler ? (
           <HorizontalEventResizeIcon onMouseDown={handleResizeStart} />
