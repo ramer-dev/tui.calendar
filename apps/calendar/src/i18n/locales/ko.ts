@@ -4,8 +4,8 @@ import type { I18nStrings } from '@t/i18n';
  * 한국어 번역
  */
 export const ko: I18nStrings = {
-    milestone: '마일스톤',
-    milestoneTitle: '마일스톤',
+    milestone: '중요',
+    milestoneTitle: '중요',
     task: '작업',
     taskTitle: '작업',
     alldayTitle: '종일',
