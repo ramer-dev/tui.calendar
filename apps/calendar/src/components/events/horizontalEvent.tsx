@@ -11,6 +11,7 @@ import { DRAGGING_TYPE_CREATORS } from '@src/helpers/drag';
 import { useCalendarColor } from '@src/hooks/calendar/useCalendarColor';
 import { useDrag } from '@src/hooks/common/useDrag';
 import { useTransientUpdate } from '@src/hooks/common/useTransientUpdate';
+import type EventModel from '@src/model/eventModel';
 import type EventUIModel from '@src/model/eventUIModel';
 import { dndSelector, optionsSelector, viewSelector } from '@src/selectors';
 import { DraggingState } from '@src/slices/dnd';
@@ -117,9 +118,17 @@ const classNames = {
   eventBody: cls('weekday-event'),
   eventTitle: cls('weekday-event-title'),
   eventDot: cls('weekday-event-dot'),
+  eventAlarmIcon: cls('icon', 'ic-alarm', 'weekday-event-alarm'),
   moveEvent: cls('dragging--move-event'),
   resizeEvent: cls('dragging--resize-horizontal-event'),
 };
+
+// Momento 확장 — 이 일정에 알림(raw.reminder)이 켜져 있는지
+function hasReminder(model: EventModel): boolean {
+  const reminder = (model.raw as { reminder?: { reminderEnabled?: boolean } } | null)?.reminder;
+
+  return !!reminder?.reminderEnabled;
+}
 
 // eslint-disable-next-line complexity
 export function HorizontalEvent({
@@ -222,11 +231,17 @@ export function HorizontalEvent({
     onMoveStart(e);
   };
 
+  // Momento 수정 — 종일 일정은 category가 항상 'time'으로 저장되고 isAllday 플래그로만
+  // 구분되는데(앱이 category: 'allday'를 쓰지 않음), 하루짜리 종일 일정은 시작일=종료일이라
+  // 아래 조건에 걸려 다일간 종일 일정과 달리 점(dot)으로만 표시되고 색이 채워지지 않았다.
+  // isAllday를 함께 확인해서 종일 일정은 기간에 관계없이 항상 단색 블록으로 그린다.
   const isDotEvent =
     !isDraggingTarget &&
     currentView === 'month' &&
     uiModel.model.category === 'time' &&
+    !uiModel.model.isAllday &&
     isSameDate(uiModel.model.start, uiModel.model.end);
+  const showReminderIcon = hasReminder(uiModel.model);
   const shouldHideResizeHandler =
     !isDraggableEvent || flat || isDraggingTarget || uiModel.exceedRight;
   const containerStyle = getContainerStyle({
@@ -272,6 +287,7 @@ export function HorizontalEvent({
             style={{ backgroundColor: eventItemStyle.backgroundColor }}
           />
         ) : null}
+        {showReminderIcon ? <i className={classNames.eventAlarmIcon} /> : null}
         <span className={classNames.eventTitle}>
           <Template template={uiModel.model.category} param={uiModel.model} />
         </span>
