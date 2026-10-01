@@ -15,6 +15,8 @@
 /* Recurrence Option Modal */
 .recurrence-option-modal {
   background-color: #fff;
+  color: #333;
+  color-scheme: light;
   border-radius: 8px;
   padding: 24px;
   max-width: 450px;

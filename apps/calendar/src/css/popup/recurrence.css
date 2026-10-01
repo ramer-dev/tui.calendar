@@ -87,6 +87,7 @@
   color: #333;
   background: transparent;
   height: 100%;
+  color-scheme: light;
 }
 
 .recurrence-input::placeholder {
