@@ -20,6 +20,7 @@
   box-shadow: 0 2px 6px 0 rgb(0 0 0 / 10%);
   clear: both;
   z-index: 2;
+  color-scheme: light;
 }
 
 .popup-section {

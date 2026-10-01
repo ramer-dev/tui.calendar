@@ -24,6 +24,11 @@ export function clone<T extends object>(source: T): T {
   return Object.assign(Object.create(Object.getPrototypeOf(source)), source);
 }
 
+/** JSON-serializable plain object clone. Use before mergeObject so module defaults are not mutated. */
+export function clonePlainObject<T>(source: T): T {
+  return JSON.parse(JSON.stringify(source));
+}
+
 /**
  * Merge two objects together. And It has some pitfalls.
  *

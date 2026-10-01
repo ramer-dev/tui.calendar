@@ -139,21 +139,21 @@ export function EventDetailPopup() {
     if (isRecurring) {
       setShowEditOptionModal(true);
     } else {
-      if (useFormPopup) {
-        showFormPopup({
-          isCreationPopup: false,
-          event,
-          title,
-          location,
-          start,
-          end,
-          isAllday,
-          isPrivate,
-          eventState: state,
-          popupArrowPointPosition,
-        });
-      } else {
-        eventBus.fire('beforeUpdateEvent', { event: event.toEventObject(), changes: {} });
+    if (useFormPopup) {
+      showFormPopup({
+        isCreationPopup: false,
+        event,
+        title,
+        location,
+        start,
+        end,
+        isAllday,
+        isPrivate,
+        eventState: state,
+        popupArrowPointPosition,
+      });
+    } else {
+      eventBus.fire('beforeUpdateEvent', { event: event.toEventObject(), changes: {} });
       }
     }
   };
@@ -162,7 +162,7 @@ export function EventDetailPopup() {
     if (isRecurring) {
       setShowDeleteOptionModal(true);
     } else {
-      eventBus.fire('beforeDeleteEvent', event.toEventObject());
+    eventBus.fire('beforeDeleteEvent', event.toEventObject());
       hideDetailPopup();
     }
   };

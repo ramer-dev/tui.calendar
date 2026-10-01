@@ -27,10 +27,10 @@ export function Template({ template, param, as: tagName = 'div' }: Props) {
 
   if (isString(htmlOrVnode)) {
     return createElement(tagName, {
-      className: cls(`template-${template}`),
-      dangerouslySetInnerHTML: {
-        __html: sanitize(htmlOrVnode),
-      },
+        className: cls(`template-${template}`),
+        dangerouslySetInnerHTML: {
+          __html: sanitize(htmlOrVnode),
+        },
     });
   }
 
@@ -44,5 +44,5 @@ export function Template({ template, param, as: tagName = 'div' }: Props) {
   // VNode인 경우
   return cloneElement(htmlOrVnode, {
     className: `${htmlOrVnode.props?.className ?? ''} ${cls(`template-${template}`)}`,
-  });
+      });
 }

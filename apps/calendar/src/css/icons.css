@@ -95,3 +95,18 @@
   background: url('./image/ic-repeat-b.png') no-repeat;
   top: -4px;
 }
+
+/* Momento 확장 — 알림(리마인더) 아이콘. 다른 아이콘과 달리 이미지 파일이 아니라 인라인 SVG를
+   데이터 URI로 넣었다 (같은 background: url(...) no-repeat 패턴). .icon.ic-alarm은 월간뷰의
+   일정 칩 배지용(14px, .icon 기본 크기 그대로), .ic-alarm-b는 상세 팝업용(다른 -b 아이콘처럼
+   top: -4px로 텍스트 세로 중앙에 맞춤). */
+.icon.ic-alarm,
+.ic-alarm-b {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23333' d='M8 1a1 1 0 0 1 1 1v.6A4.5 4.5 0 0 1 12.5 7v2.2l1.13 2.26A1 1 0 0 1 12.74 13H3.26a1 1 0 0 1-.9-1.54L3.5 9.2V7A4.5 4.5 0 0 1 7 2.6V2a1 1 0 0 1 1-1Zm0 13.5a1.75 1.75 0 0 0 1.7-1.5h-3.4A1.75 1.75 0 0 0 8 14.5Z'/%3E%3C/svg%3E")
+    no-repeat center;
+  background-size: 12px 12px;
+}
+
+.ic-alarm-b {
+  top: -4px;
+}

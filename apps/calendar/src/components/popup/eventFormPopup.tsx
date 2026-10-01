@@ -11,6 +11,8 @@ import { DateSelector } from '@src/components/popup/dateSelector';
 import { EventStateSelector } from '@src/components/popup/eventStateSelector';
 import { LocationInputBox } from '@src/components/popup/locationInputBox';
 import { RecurrenceInputBox } from '@src/components/popup/recurrenceInput';
+import { ReminderInputBox } from '@src/components/popup/reminderInput';
+import type { ReminderValue } from '@src/components/popup/reminderInput';
 import { PopupSection } from '@src/components/popup/popupSection';
 import { TitleInputBox } from '@src/components/popup/titleInputBox';
 import { Template } from '@src/components/template';
@@ -75,6 +77,36 @@ function calculatePopupPosition(
 
 function isBooleanKey(key: string): key is BooleanKeyOfEventObject {
   return BOOLEAN_KEYS_OF_EVENT_MODEL_DATA.indexOf(key as BooleanKeyOfEventObject) !== -1;
+}
+
+// Momento 확장 — 새 일정을 만들 때 "알림" 기본값. 앱(App.tsx)이 설정 화면의 값을
+// window.__momentoDefaultReminder에 게시해두면 그 값을, 없으면 안전한 기본값을 사용한다.
+function getDefaultReminder(): ReminderValue {
+  const published = (window as any).__momentoDefaultReminder;
+  if (published && typeof published.value === 'number' && typeof published.unit === 'string') {
+    return { reminderEnabled: false, reminderValue: published.value, reminderUnit: published.unit };
+  }
+  return { reminderEnabled: false, reminderValue: 10, reminderUnit: '분' };
+}
+
+// event.raw에 저장된 개별 알림 설정을 읽는다 (없으면 새 기본값)
+function getReminderFromRaw(raw: unknown): ReminderValue {
+  const reminder = (raw as any)?.reminder;
+  if (reminder && typeof reminder === 'object') {
+    return {
+      reminderEnabled: !!reminder.reminderEnabled,
+      reminderValue:
+        typeof reminder.reminderValue === 'number' ? reminder.reminderValue : 10,
+      reminderUnit:
+        reminder.reminderUnit === '초' ||
+        reminder.reminderUnit === '분' ||
+        reminder.reminderUnit === '시간' ||
+        reminder.reminderUnit === '일'
+          ? reminder.reminderUnit
+          : '분',
+    };
+  }
+  return getDefaultReminder();
 }
 
 function getChanges(event: EventModel, eventObject: EventObject) {
@@ -145,6 +177,9 @@ export function EventFormPopup() {
   const eventBus = useEventBus();
   const formPopupSlot = useFloatingLayer('formPopupSlot');
   const [formState, formStateDispatch] = useFormState(calendars[0]?.id);
+  // Momento 확장 — 일정별 알림. EventObject/EventModel의 정식 필드가 아니라서 formState
+  // reducer를 거치지 않고 별도 로컬 상태로 관리한 뒤, 제출 시 eventData.raw에 병합한다.
+  const [reminder, setReminder] = useState<ReminderValue>(getDefaultReminder());
 
   const datePickerRef = useRef<DateRangePicker>(null);
   const popupContainerRef = useRef<HTMLDivElement>(null);
@@ -163,6 +198,13 @@ export function EventFormPopup() {
     return cls('popup-arrow', { top, bottom });
   }, [arrowDirection]);
 
+  // Momento 확장 — "이 일정만 수정"인지 여부.
+  // event_exceptions 테이블(예외 인스턴스 저장소)은 반복 규칙이나 알림(raw)을 갖지 않으므로,
+  // 이 화면에서 반복/알림을 고쳐도 저장 시 그대로 버려진다. 그래서 혼동을 막기 위해 아예
+  // 편집 UI를 숨기고, 반복/알림은 "이 일정 및 향후" 또는 "모든 일정 수정"으로 안내한다.
+  const isSingleInstanceEdit =
+    !isCreationPopup && popupParams?.recurrenceActionOption === 'this';
+
   useLayoutEffect(() => {
     if (popupContainerRef.current && popupArrowPointPosition && layoutContainer) {
       const layoutRect = layoutContainer.getBoundingClientRect();
@@ -179,7 +221,7 @@ export function EventFormPopup() {
       setArrowLeft(arrowLeftPosition);
       setArrowDirection(direction);
     }
-  }, [layoutContainer, popupArrowPointPosition, formState.isRepeat]); // formState.isRepeat 추가: recurrence 활성화 시 위치 재계산
+  }, [layoutContainer, popupArrowPointPosition, formState.isRepeat, reminder.reminderEnabled]); // isRepeat/reminderEnabled: 옵션 영역이 펼쳐질 때 위치 재계산
 
   // Sync store's popupParams with formState when editing event
   useEffect(() => {
@@ -195,8 +237,9 @@ export function EventFormPopup() {
       }
       
       // event.isRepeat가 true이거나 recurrenceRule이 있으면 반복 이벤트로 간주
-      const isRepeat = event.isRepeat || !!recurrenceRule;
-      
+      // 단, "이 일정만 수정"은 예외(단일 인스턴스)로 저장되므로 반복 규칙 자체를 다루지 않는다
+      const isRepeat = !isSingleInstanceEdit && (event.isRepeat || !!recurrenceRule);
+
       // recurrenceRule이 있으면 상세 정보 로깅
       if (recurrenceRule) {
         console.log('[eventFormPopup] 수정 시 formState 초기화 - recurrenceRule 상세:', {
@@ -240,13 +283,20 @@ export function EventFormPopup() {
       });
       
       console.log('[eventFormPopup] formState 초기화 완료 - isRepeat:', isRepeat, 'recurrenceRule:', isRepeat ? recurrenceRule : undefined);
+
+      // Momento 확장 — 이 일정에 저장된 알림 설정을 raw에서 읽어온다 (없으면 기본값)
+      setReminder(getReminderFromRaw(event.raw));
+    } else if (isPresent(popupParams) && isNil(event)) {
+      // 새 일정 생성 팝업이 열릴 때마다 설정 화면의 최신 기본값으로 갱신
+      setReminder(getDefaultReminder());
     }
-  }, [calendars, event, formStateDispatch, popupParams]);
+  }, [calendars, event, formStateDispatch, popupParams, isSingleInstanceEdit]);
 
   // Reset form states when closing the popup
   useEffect(() => {
     if (isNil(popupParams)) {
       formStateDispatch({ type: FormStateActionType.reset });
+      setReminder(getDefaultReminder());
     }
   }, [formStateDispatch, popupParams]);
 
@@ -270,6 +320,11 @@ export function EventFormPopup() {
     // formState에서 recurrenceRule과 isRepeat 명시적으로 설정
     eventData.isRepeat = formState.isRepeat;
     eventData.recurrenceRule = formState.isRepeat ? formState.recurrenceRule : undefined;
+
+    // Momento 확장 — 알림 설정을 raw에 병합 (기존 raw의 다른 값은 보존)
+    const existingRaw =
+      event && event.raw && typeof event.raw === 'object' ? (event.raw as Record<string, unknown>) : {};
+    eventData.raw = { ...existingRaw, reminder };
 
     console.log('[eventFormPopup] onSubmit - eventData:', {
       isRepeat: eventData.isRepeat,
@@ -300,13 +355,6 @@ export function EventFormPopup() {
           changes.recurrenceRule = eventData.recurrenceRule;
         }
       }
-      
-      console.log('eventFormPopup - changes:', changes);
-      console.log('eventFormPopup - eventData.recurrenceRule:', eventData.recurrenceRule);
-      console.log('eventFormPopup - eventData.isRepeat:', eventData.isRepeat);
-      console.log('eventFormPopup - event.recurrenceRule:', event.recurrenceRule);
-      console.log('eventFormPopup - event.isRepeat:', event.isRepeat);
-
       eventBus.fire('beforeUpdateEvent', { event: eventObject, changes });
     }
     hideAllPopup();
@@ -341,12 +389,28 @@ export function EventFormPopup() {
               formStateDispatch={formStateDispatch}
               ref={datePickerRef}
             />
-            <RecurrenceInputBox
-              recurrence={formState.recurrenceRule}
-              formStateDispatch={formStateDispatch}
-              isRepeat={formState.isRepeat}
-              startDate={start}
-            />
+            {isSingleInstanceEdit ? (
+              // "이 일정만 수정"은 반복 규칙과 알림(raw)을 저장하지 않는 예외 레코드로 남으므로,
+              // 편집 UI 대신 안내만 보여준다 (반복/알림을 바꾸려면 다른 수정 범위를 선택해야 함).
+              <PopupSection>
+                <div className={cls('popup-section-item', 'popup-section-note')}>
+                  <span className={cls('content')}>
+                    반복·알림 설정은 이 일정만 수정할 때는 바꿀 수 없습니다. 「이 일정 및 향후
+                    일정」 또는 「모든 일정」 수정을 선택해 주세요.
+                  </span>
+                </div>
+              </PopupSection>
+            ) : (
+              <div className={cls('popup-section-toggle-row')}>
+                <RecurrenceInputBox
+                  recurrence={formState.recurrenceRule}
+                  formStateDispatch={formStateDispatch}
+                  isRepeat={formState.isRepeat}
+                  startDate={start}
+                />
+                <ReminderInputBox value={reminder} onChange={setReminder} />
+              </div>
+            )}
             <ClosePopupButton type="form" close={close} />
           </div>
           <div className={cls('form-container-footer')}>

@@ -15,8 +15,10 @@ const banner = [
 
 export default defineConfig(() => {
   return {
+    root: path.resolve(__dirname),
     build: {
       emptyOutDir: false,
+      outDir: path.resolve(__dirname, 'dist'),
       lib: {
         entry: path.resolve(__dirname, 'src/index.ts'),
         formats: ['es'],

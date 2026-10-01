@@ -34,7 +34,7 @@ interface Props {
 
 const classNames = {
   content: cls('content'),
-  repeat: cls('popup-section-item', 'popup-section-repeat'),
+  repeat: cls('popup-section-item', 'popup-section-repeat', 'popup-section-toggle'),
   repeatOptions: cls('recurrence-options'),
   frequencySelect: cls('recurrence-select-wrapper'),
   frequencySelectInput: cls('recurrence-select'),
@@ -87,7 +87,21 @@ export function RecurrenceInputBox({
   const [endType, setEndType] = useState<'count' | 'until' | 'forever'>(
     recurrence?.count ? 'count' : recurrence?.until ? 'until' : 'forever'
   );
-  
+
+  // Momento 수정 — 반복 규칙의 기준 시작일(anchor)과 recurrenceId.
+  // 기존에는 아래 createRecurrenceRule에서 항상 startDate prop(=팝업을 연 인스턴스 자신의 날짜)으로
+  // 새 규칙을 만들어서, "모든 일정 수정"으로 아무 인스턴스나 열기만 해도 시리즈 시작일이
+  // 클릭한 인스턴스 날짜로 바뀌고 recurrenceId도 사라지는 버그가 있었다(예: 반복 5회 중 3회차를
+  // 삭제 후 5회차를 "모든 일정 수정"으로 열면 1~4회차가 사라지고 5회차부터 다시 5회 반복됨).
+  // 기존 규칙(recurrence)이 있으면 그 시작일/recurrenceId를 그대로 유지하고,
+  // 새로 반복을 켜는 경우(recurrence 없음)에만 지금 팝업이 연 날짜(startDate)를 기준으로 삼는다.
+  const [anchorStartDate, setAnchorStartDate] = useState<string | Date | TZDate | undefined>(
+    recurrence?.startDate ?? startDate
+  );
+  const [recurrenceIdState, setRecurrenceIdState] = useState<string | undefined>(
+    recurrence?.recurrenceId
+  );
+
   // 사용자가 endType을 직접 변경했는지 추적하는 ref
   const userChangedEndTypeRef = useRef<boolean>(false);
   
@@ -213,29 +227,35 @@ export function RecurrenceInputBox({
       }
       prevRecurrenceRef.current = recurrence;
       
-      if (recurrence) {
-        const repeat = recurrence.repeat;
+    if (recurrence) {
+      const repeat = recurrence.repeat;
         console.log('[recurrenceInput] repeat 설정:', repeat);
-        
+
+        // Momento 수정 — 시리즈의 기준 시작일/recurrenceId는 항상 prop 그대로 따라간다
+        // (아래 startDate prop으로 덮어쓰지 않음 — 어떤 인스턴스를 열어서 수정하든 시리즈 자체의
+        // 시작일은 바뀌면 안 된다)
+        setAnchorStartDate(recurrence.startDate);
+        setRecurrenceIdState(recurrence.recurrenceId);
+
         // frequency 설정
-        setFrequency(repeat.frequency);
+      setFrequency(repeat.frequency);
         
         // interval 설정
-        if ('interval' in repeat) {
-          setInterval(repeat.interval || 1);
-        }
+      if ('interval' in repeat) {
+        setInterval(repeat.interval || 1);
+      }
         
         // byDay 설정 (weekly 또는 monthly/yearly의 요일 위치)
         if ('byDay' in repeat && repeat.byDay && repeat.byDay.length > 0) {
-          if (repeat.frequency === 'weekly') {
-            setSelectedDays(repeat.byDay as DayOfWeek[]);
+        if (repeat.frequency === 'weekly') {
+          setSelectedDays(repeat.byDay as DayOfWeek[]);
             console.log('[recurrenceInput] selectedDays 설정:', repeat.byDay);
-          } else {
-            const parsed = parseDayWithPosition(repeat.byDay as DayOfWeekWithPosition[]);
-            setWeekPosition(parsed.position);
-            setWeekDay(parsed.day);
+        } else {
+          const parsed = parseDayWithPosition(repeat.byDay as DayOfWeekWithPosition[]);
+          setWeekPosition(parsed.position);
+          setWeekDay(parsed.day);
             console.log('[recurrenceInput] weekPosition, weekDay 설정:', parsed);
-          }
+        }
         } else {
           // byDay가 없으면 초기화
           if (repeat.frequency === 'weekly') {
@@ -248,15 +268,15 @@ export function RecurrenceInputBox({
         
         // byMonthDay 설정
         if ('byMonthDay' in repeat && repeat.byMonthDay && repeat.byMonthDay.length > 0) {
-          setMonthDay(repeat.byMonthDay[0]);
+        setMonthDay(repeat.byMonthDay[0]);
           console.log('[recurrenceInput] monthDay 설정:', repeat.byMonthDay[0]);
         } else {
           setMonthDay(null);
-        }
+      }
         
         // byMonth 설정 (yearly)
         if ('byMonth' in repeat && repeat.byMonth && repeat.byMonth.length > 0) {
-          setSelectedMonths(repeat.byMonth);
+        setSelectedMonths(repeat.byMonth);
           console.log('[recurrenceInput] selectedMonths 설정:', repeat.byMonth);
         } else {
           setSelectedMonths([]);
@@ -266,11 +286,11 @@ export function RecurrenceInputBox({
         // 사용자가 직접 변경한 경우에는 prop에서 오는 값으로 덮어쓰지 않음
         if (!userChangedEndTypeRef.current) {
           if (recurrence.count !== undefined && recurrence.count !== null) {
-            setEndType('count');
-            setCount(recurrence.count);
+        setEndType('count');
+        setCount(recurrence.count);
             console.log('[recurrenceInput] endType: count, count:', recurrence.count);
           } else if (recurrence.until && recurrence.until !== 'forever') {
-            setEndType('until');
+        setEndType('until');
             setUntil(getUntilInitialValue(recurrence.until));
             console.log('[recurrenceInput] endType: until, until:', getUntilInitialValue(recurrence.until));
           } else {
@@ -287,7 +307,7 @@ export function RecurrenceInputBox({
             setUntil(getUntilInitialValue(recurrence.until));
           }
         }
-    } else {
+      } else {
       // recurrence가 없으면 기본값으로 초기화 (수정 모드에서 반복 규칙을 변경할 수 있도록)
       // 하지만 isRepeat이 true이면 초기화하지 않음 (새로 생성 중일 수 있음)
       if (!isRepeat) {
@@ -300,10 +320,13 @@ export function RecurrenceInputBox({
         setWeekDay(null);
         setSelectedMonths([]);
         if (!userChangedEndTypeRef.current) {
-          setEndType('forever');
-        }
+        setEndType('forever');
+      }
         setCount(10);
         setUntil('');
+        // 기존 규칙이 없는 상태이므로, 반복을 새로 켤 때의 기준 시작일은 지금 팝업이 연 날짜로
+        setAnchorStartDate(startDate);
+        setRecurrenceIdState(undefined);
         userChangedEndTypeRef.current = false; // 초기화 시 플래그도 리셋
       }
     }
@@ -337,8 +360,11 @@ export function RecurrenceInputBox({
   }, [frequency]);
 
   // recurrence rule 생성
+  // Momento 수정 — 기준 시작일은 startDate prop(=지금 연 인스턴스의 날짜)이 아니라
+  // anchorStartDate(기존 규칙이 있으면 그 시작일, 새로 반복을 켜는 경우에만 startDate)를 쓴다.
+  const ruleAnchorDate = anchorStartDate ?? startDate;
   const createRecurrenceRule = useMemo((): RecurrenceRule | undefined => {
-    if (!isRepeat || !startDate) {
+    if (!isRepeat || !ruleAnchorDate) {
       return undefined;
     }
 
@@ -395,23 +421,26 @@ export function RecurrenceInputBox({
         break;
     }
 
-    // startDate를 ISO 문자열로 변환 (전체 날짜/시간 정보 유지)
+    // 기준 시작일을 ISO 문자열로 변환 (전체 날짜/시간 정보 유지)
     let ruleStartDate: string | Date;
-    if (!startDate) {
+    if (!ruleAnchorDate) {
       ruleStartDate = new TZDate().toDate().toISOString();
-    } else if (typeof startDate === 'string') {
-      ruleStartDate = startDate;
-    } else if (startDate instanceof TZDate) {
-      ruleStartDate = startDate.toDate().toISOString();
-    } else if (startDate instanceof Date) {
-      ruleStartDate = startDate.toISOString();
+    } else if (typeof ruleAnchorDate === 'string') {
+      ruleStartDate = ruleAnchorDate;
+    } else if (ruleAnchorDate instanceof TZDate) {
+      ruleStartDate = ruleAnchorDate.toDate().toISOString();
+    } else if (ruleAnchorDate instanceof Date) {
+      ruleStartDate = ruleAnchorDate.toISOString();
     } else {
-      ruleStartDate = new TZDate(startDate).toDate().toISOString();
+      ruleStartDate = new TZDate(ruleAnchorDate).toDate().toISOString();
     }
 
     const rule: RecurrenceRule = {
       repeat,
       startDate: ruleStartDate,
+      // recurrenceId를 유지해야 앱이 이 규칙을 어느 마스터 이벤트의 것인지 식별할 수 있다
+      // (없으면 undefined — 새로 반복을 켜는 경우이며, 저장 시 마스터 자신의 id로 채워짐)
+      ...(recurrenceIdState ? { recurrenceId: recurrenceIdState } : {}),
     };
 
     if (endType === 'count') {
@@ -445,7 +474,8 @@ export function RecurrenceInputBox({
     return rule;
   }, [
     isRepeat,
-    startDate,
+    ruleAnchorDate,
+    recurrenceIdState,
     frequency,
     interval,
     selectedDays,
@@ -539,8 +569,8 @@ export function RecurrenceInputBox({
               'ic-checkbox-checked': isRepeat,
             })}
           />
-          <span className={classNames.content}>
-            <Template template="recurrencePlaceholder" />
+          <span className={classNames.content}> 
+            <Template template="recurrencePlaceholder"/>
           </span>
           <input
             name="isRepeat"
@@ -558,18 +588,18 @@ export function RecurrenceInputBox({
           <div className={cls('recurrence-option-item')}>
             <label className={cls('recurrence-label')}>반복 빈도</label>
             <div className={classNames.frequencySelect}>
-              <select
+            <select
                 className={classNames.frequencySelectInput}
-                value={frequency}
-                onChange={(e) => setFrequency(e.currentTarget.value as RepeatFrequency)}
-              >
-                {FREQUENCY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              value={frequency}
+              onChange={(e) => setFrequency(e.currentTarget.value as RepeatFrequency)}
+            >
+              {FREQUENCY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           </div>
 
           {/* 빈도별 옵션 컴포넌트 */}
@@ -611,7 +641,7 @@ export function RecurrenceInputBox({
               onMonthDayChange={setMonthDay}
               onWeekPositionChange={setWeekPosition}
               onWeekDayChange={setWeekDay}
-            />
+                  />
           )}
 
           {/* 종료 조건 */}
@@ -622,7 +652,7 @@ export function RecurrenceInputBox({
             onEndTypeChange={handleEndTypeChange}
             onCountChange={setCount}
             onUntilChange={setUntil}
-          />
+              />
         </div>
       )}
     </>
